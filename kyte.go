@@ -25,12 +25,13 @@ var (
 type Kyte struct {
 	source     any
 	fields     map[any]string
+	fieldNames []string
 	errs       []error
 	fieldCheck bool
 }
 
 func newKyte(source any) *Kyte {
-	kyte := &Kyte{fields: make(map[any]string)}
+	kyte := &Kyte{fields: make(map[any]string), fieldCheck: true}
 	if source == nil {
 		kyte.errs = append(kyte.errs, ErrNilSource)
 		return kyte
@@ -59,6 +60,10 @@ func newKyte(source any) *Kyte {
 		if field.Type.Kind() == reflect.Struct {
 			getSubStructFields(v.Field(i), bsonTag+".", kyte.fields)
 		}
+	}
+
+	for _, v := range kyte.fields {
+		kyte.fieldNames = append(kyte.fieldNames, v)
 	}
 
 	return kyte
@@ -151,7 +156,7 @@ func (k *Kyte) validateQueryFieldAndValue(field any, value any) (string, error) 
 			_, ok = k.fields[field]
 		}
 
-		if !ok && fieldName == "" {
+		if !ok && !contains(k.fieldNames, fieldName) {
 			return "", errors.Join(ErrNotValidFieldForQuery, errors.New(fmt.Sprintf("field: %s You can ignore this error by setting fieldCheck to false", fieldName)))
 		}
 
