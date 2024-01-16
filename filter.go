@@ -31,7 +31,7 @@ type operation struct {
 
 type filter struct {
 	kyte       Kyte
-	query      bson.M
+	query      bson.D
 	operations []operation
 }
 
@@ -70,7 +70,7 @@ func Filter(opts ...FilterOption) *filter {
 
 	return &filter{
 		kyte:  *kyte,
-		query: bson.M{},
+		query: bson.D{},
 	}
 }
 
@@ -187,18 +187,19 @@ func (f *filter) And(filter *filter) *filter {
 		filter.kyte.checkField = f.kyte.checkField
 		filter.kyte.setSourceAndPrepareFields(f.kyte.source)
 	}
+
 	query, err := filter.Build()
 	if err != nil {
 		f.kyte.setError(err)
 		return f
 	}
 
-	if f.query[and] == nil {
-		f.query[and] = bson.A{query}
-	} else {
-		f.query[and] = append(f.query[and].(bson.A), query)
+	andQuery := bson.A{}
+	for _, q := range query {
+		andQuery = append(andQuery, bson.M{q.Key: q.Value})
 	}
 
+	f.query = append(f.query, bson.E{Key: and, Value: andQuery})
 	return f
 }
 
@@ -227,11 +228,12 @@ func (f *filter) Or(filter *filter) *filter {
 		return f
 	}
 
-	if f.query[or] == nil {
-		f.query[or] = bson.A{query}
-	} else {
-		f.query[or] = append(f.query[or].(bson.A), query)
+	orQuery := bson.A{}
+	for _, q := range query {
+		orQuery = append(orQuery, bson.M{q.Key: q.Value})
 	}
+
+	f.query = append(f.query, bson.E{Key: or, Value: orQuery})
 	return f
 }
 
@@ -246,7 +248,7 @@ func (f *filter) set(operator string, field any, value any) *filter {
 /*
 Build returns the query as bson.M. If there is an error, it will return nil and the first error.
 */
-func (f *filter) Build() (bson.M, error) {
+func (f *filter) Build() (bson.D, error) {
 	for _, opt := range f.operations {
 		fieldName, err := f.kyte.validateQueryFieldAndValue(opt.field, opt.value)
 		if err != nil {
@@ -264,10 +266,8 @@ func (f *filter) Build() (bson.M, error) {
 				opt.value = bson.A{opt.value}
 			}
 
-			f.query[fieldName] = bson.M{opt.operator: opt.value}
-		} else {
-			f.query[fieldName] = bson.M{opt.operator: opt.value}
 		}
+		f.query = append(f.query, bson.E{Key: fieldName, Value: bson.M{opt.operator: opt.value}})
 	}
 
 	if f.kyte.hasErrors() {
