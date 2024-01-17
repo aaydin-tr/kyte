@@ -305,6 +305,18 @@ func (f *filter) Regex(field any, regex *regexp.Regexp, options ...string) *filt
 	return f.set(regx, field, bson.M{regx: regex.String(), regxOptions: options[0]})
 }
 
+/*
+Raw use raw bson.D and directly append it to the query. It is useful for using operators that are not implemented in this package.
+Raw will not provide any validation, so it is recommended to use it carefully.
+
+	Filter().
+		Raw(bson.D{{"name", "John"}}) // {"name": "John"}
+*/
+func (f *filter) Raw(query bson.D) *filter {
+	f.query = append(f.query, query...)
+	return f
+}
+
 func (f *filter) set(operator string, field any, value any, opts ...any) *filter {
 	f.operations = append(f.operations, operation{operator: operator, field: field, value: value})
 	return f
