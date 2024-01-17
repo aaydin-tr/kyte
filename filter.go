@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	// Comparison Query Operators
 	eq  = "$eq"
 	ne  = "$ne"
 	gt  = "$gt"
@@ -16,11 +17,12 @@ const (
 	in  = "$in"
 	nin = "$nin"
 
+	// Logical Query Operators
 	and = "$and"
 	or  = "$or"
+	nor = "$nor"
 	// TODO: implement
 	// not = "$not"
-	// nor = "$nor"
 )
 
 type operation struct {
@@ -234,6 +236,41 @@ func (f *filter) Or(filter *filter) *filter {
 	}
 
 	f.query = append(f.query, bson.E{Key: or, Value: orQuery})
+	return f
+}
+
+/*
+NOR use mongo [$nor] logical query operator to combine multiple query expressions.
+
+	Filter(source).
+		Equal("name", "John").
+		NOR(
+			Filter().
+				Equal("age", 18).
+				Equal("surname", "Doe"),
+		)
+
+[$nor]: https://www.mongodb.com/docs/manual/reference/operator/query/nor/#mongodb-query-op.-nor
+*/
+
+func (f *filter) NOR(filter *filter) *filter {
+	if f.kyte.source != nil {
+		filter.kyte.checkField = f.kyte.checkField
+		filter.kyte.setSourceAndPrepareFields(f.kyte.source)
+	}
+
+	query, err := filter.Build()
+	if err != nil {
+		f.kyte.setError(err)
+		return f
+	}
+
+	norQuery := bson.A{}
+	for _, q := range query {
+		norQuery = append(norQuery, bson.M{q.Key: q.Value})
+	}
+
+	f.query = append(f.query, bson.E{Key: nor, Value: norQuery})
 	return f
 }
 
