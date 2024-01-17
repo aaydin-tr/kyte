@@ -2,6 +2,7 @@ package main
 
 import (
 	"reflect"
+	"regexp"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -17,12 +18,21 @@ const (
 	in  = "$in"
 	nin = "$nin"
 
-	// Logical Query Operators
 	and = "$and"
 	or  = "$or"
 	nor = "$nor"
+
+	regx        = "$regex"
+	regxOptions = "$options"
+
 	// TODO: implement
 	// not = "$not"
+	// json = "$jsonSchema"
+	// mod  = "$mod"
+	// text = "$text"
+	// where = "$where"
+	// expr = "$expr"
+
 )
 
 type operation struct {
@@ -274,10 +284,29 @@ func (f *filter) NOR(filter *filter) *filter {
 	return f
 }
 
-func (f *filter) set(operator string, field any, value any) *filter {
-	if f.kyte.hasErrors() {
-		return f
+/*
+Regex use mongo [$regex] operator to compare field and value.
+
+	Filter().
+		Regex("name", regexp.MustCompile("^J")) // {"name": {"$regex": "^J"}}
+
+	Filter().
+		Regex("name", regexp.MustCompile("^J"), "i") // {"name": {"$regex": "^J", "$options": "i"}}
+
+	Filter().
+		Regex("name", regexp.MustCompile("^J"), "im") // {"name": {"$regex": "^J", "$options": "im"}}
+
+[$regex]: https://www.mongodb.com/docs/manual/reference/operator/query/regex/#mongodb-query-op.-regex
+*/
+func (f *filter) Regex(field any, regex *regexp.Regexp, options ...string) *filter {
+	if len(options) == 0 {
+		return f.set(regx, field, bson.M{regx: regex.String()})
 	}
+
+	return f.set(regx, field, bson.M{regx: regex.String(), regxOptions: options[0]})
+}
+
+func (f *filter) set(operator string, field any, value any, opts ...any) *filter {
 	f.operations = append(f.operations, operation{operator: operator, field: field, value: value})
 	return f
 }
@@ -302,8 +331,13 @@ func (f *filter) Build() (bson.D, error) {
 			if valueType.Kind() != reflect.Slice {
 				opt.value = bson.A{opt.value}
 			}
-
 		}
+
+		if opt.operator == regx {
+			f.query = append(f.query, bson.E{Key: fieldName, Value: opt.value})
+			continue
+		}
+
 		f.query = append(f.query, bson.E{Key: fieldName, Value: bson.M{opt.operator: opt.value}})
 	}
 
