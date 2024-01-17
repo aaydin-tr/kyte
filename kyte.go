@@ -41,6 +41,7 @@ func newKyte(source any, checkField bool) *Kyte {
 	return kyte
 }
 
+// TODO refactor this function
 func (k *Kyte) setSourceAndPrepareFields(source any) {
 	k.source = source
 	k.fields = make(map[any]string)
@@ -83,6 +84,7 @@ func (k *Kyte) setError(err error) {
 	k.errs = append(k.errs, err)
 }
 
+// TODO refactor this function
 func (k *Kyte) validateQueryFieldAndValue(field any, value any) (string, error) {
 	if len(k.errs) > 0 {
 		return "", k.errs[0]
