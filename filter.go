@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	// Comparison Query Operators
 	eq  = "$eq"
 	ne  = "$ne"
 	gt  = "$gt"
@@ -25,14 +24,30 @@ const (
 	regx        = "$regex"
 	regxOptions = "$options"
 
-	// TODO: implement
-	// not = "$not"
-	// json = "$jsonSchema"
-	// mod  = "$mod"
-	// text = "$text"
-	// where = "$where"
-	// expr = "$expr"
+	// TODO implement Day 1
+	// $exists
+	// $type
+	// $jsonSchema
+	// $mod
+	// $where
+	// $all
+	// $size
 
+	// TODO implement Day 2
+	// $elemMatch
+	// $not
+
+	// TODO: implement Later
+	// $text
+	// $expr
+	// $geoIntersects
+	// $geoWithin
+	// $near
+	// $nearSphere
+	// $bitsAllClear
+	// $bitsAllSet
+	// $bitsAnyClear
+	// $bitsAnySet
 )
 
 type operation struct {
