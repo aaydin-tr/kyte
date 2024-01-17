@@ -218,7 +218,7 @@ func (f *filter) And(filter *filter) *filter {
 /*
 Or use mongo [$or] logical query operator to combine multiple query expressions.
 
-	Filter(source).
+	Filter().
 		Equal("name", "John").
 		Or(
 			Filter().
@@ -262,7 +262,6 @@ NOR use mongo [$nor] logical query operator to combine multiple query expression
 
 [$nor]: https://www.mongodb.com/docs/manual/reference/operator/query/nor/#mongodb-query-op.-nor
 */
-
 func (f *filter) NOR(filter *filter) *filter {
 	if f.kyte.source != nil {
 		filter.kyte.checkField = f.kyte.checkField
