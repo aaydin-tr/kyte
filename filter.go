@@ -64,23 +64,23 @@ type filter struct {
 
 type FilterOptions struct {
 	// Source is the struct that will be used to check if the field is valid for query based on the struct bson tags.
-	Source any
+	source any
 
-	// CheckField is true by default, it will check if the field is valid for query based on the source struct bson tags.
-	CheckField bool
+	// ValidateField is true by default, it will check if the field is valid for query based on the source struct bson tags.
+	validateField bool
 }
 
 type FilterOption func(*FilterOptions)
 
-func WithCheckField(checkField bool) FilterOption {
+func ValidateField(validateField bool) FilterOption {
 	return func(o *FilterOptions) {
-		o.CheckField = checkField
+		o.validateField = validateField
 	}
 }
 
-func WithSource(source any) FilterOption {
+func Source(source any) FilterOption {
 	return func(o *FilterOptions) {
-		o.Source = source
+		o.source = source
 	}
 }
 
@@ -93,7 +93,7 @@ func Filter(opts ...FilterOption) *filter {
 		opt(options)
 	}
 
-	kyte := newKyte(options.Source, options.CheckField)
+	kyte := newKyte(options.source, options.validateField)
 
 	return &filter{
 		kyte:  *kyte,
