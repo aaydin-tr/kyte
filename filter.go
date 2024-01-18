@@ -332,11 +332,6 @@ func (f *filter) Raw(query bson.D) *filter {
 	return f
 }
 
-func (f *filter) set(operator string, field any, value any, opts ...any) *filter {
-	f.operations = append(f.operations, operation{operator: operator, field: field, value: value})
-	return f
-}
-
 /*
 Build returns the query as bson.M. If there is an error, it will return nil and the first error.
 */
@@ -372,4 +367,9 @@ func (f *filter) Build() (bson.D, error) {
 	}
 
 	return f.query, nil
+}
+
+func (f *filter) set(operator string, field any, value any, opts ...any) *filter {
+	f.operations = append(f.operations, operation{operator: operator, field: field, value: value})
+	return f
 }
