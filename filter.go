@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
 const (
@@ -25,9 +26,9 @@ const (
 	regxOptions = "$options"
 
 	exists = "$exists"
+	_type  = "$type"
 
 	// TODO implement Day 1
-	// $type
 	// $jsonSchema
 	// $mod
 	// $where
@@ -331,6 +332,30 @@ Exists use mongo [$exists] operator to check if the field exists.
 */
 func (f *filter) Exists(field any, value bool) *filter {
 	return f.set(exists, field, value)
+}
+
+/*
+Type use mongo [$type] operator to check if the field is of the specified type.
+
+	Filter().
+		Type("name", bsontype.String) // {"name": {"$type": 0x02}}
+
+[$type]: https://www.mongodb.com/docs/manual/reference/operator/query/type/#mongodb-query-op.-type
+*/
+func (f *filter) Type(field any, values ...bsontype.Type) *filter {
+	if len(values) == 0 {
+		f.kyte.setError(ErrInvalidBsonType)
+		return f
+	}
+
+	for _, v := range values {
+		if !v.IsValid() {
+			f.kyte.setError(ErrInvalidBsonType)
+			return f
+		}
+	}
+
+	return f.set(_type, field, values)
 }
 
 /*

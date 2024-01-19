@@ -22,6 +22,8 @@ var (
 	ErrNilValue          = errors.New("value is nil")
 	ErrNilField          = errors.New("field is nil")
 	ErrFieldMustBeString = errors.New("field must be string")
+
+	ErrInvalidBsonType = errors.New("invalid bson type")
 )
 
 type Kyte struct {
