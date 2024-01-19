@@ -24,8 +24,9 @@ const (
 	regx        = "$regex"
 	regxOptions = "$options"
 
+	exists = "$exists"
+
 	// TODO implement Day 1
-	// $exists
 	// $type
 	// $jsonSchema
 	// $mod
@@ -318,6 +319,18 @@ func (f *filter) Regex(field any, regex *regexp.Regexp, options ...string) *filt
 	}
 
 	return f.set(regx, field, bson.M{regx: regex.String(), regxOptions: options[0]})
+}
+
+/*
+Exists use mongo [$exists] operator to check if the field exists.
+
+	Filter().
+		Exists("name", true) // {"name": {"$exists": true}}
+
+[$exists]: https://www.mongodb.com/docs/manual/reference/operator/query/exists/#mongodb-query-op.-exists
+*/
+func (f *filter) Exists(field any, value bool) *filter {
+	return f.set(exists, field, value)
 }
 
 /*
