@@ -25,15 +25,13 @@ const (
 	regx        = "$regex"
 	regxOptions = "$options"
 
-	exists = "$exists"
-	_type  = "$type"
-	mod    = "$mod"
-	where  = "$where"
-	all    = "$all"
-	size   = "$size"
-
-	// TODO implement Day 1
-	// $jsonSchema
+	exists     = "$exists"
+	_type      = "$type"
+	mod        = "$mod"
+	where      = "$where"
+	all        = "$all"
+	size       = "$size"
+	jsonSchema = "$jsonSchema"
 
 	// TODO implement Day 2
 	// $elemMatch
@@ -412,6 +410,18 @@ func (f *filter) Size(field any, value int) *filter {
 }
 
 /*
+JSONSchema use mongo [$jsonSchema] operator to validate documents against the given JSON Schema.
+
+	Filter().
+		JSONSchema(bson.M{"required": []string{"name"}}) // {"$jsonSchema": {"required": ["name"]}}
+
+[$jsonSchema]: https://www.mongodb.com/docs/manual/reference/operator/query/jsonSchema/#mongodb-query-op.-jsonSchema
+*/
+func (f *filter) JSONSchema(schema bson.M) *filter {
+	return f.set(jsonSchema, nil, schema)
+}
+
+/*
 Raw use raw bson.D and directly append it to the query. It is useful for using operators that are not implemented in this package.
 Raw will not provide any validation, so it is recommended to use it carefully.
 
@@ -430,6 +440,11 @@ func (f *filter) Build() (bson.D, error) {
 	for _, opt := range f.operations {
 		if opt.operator == where {
 			f.query = append(f.query, bson.E{Key: where, Value: opt.value})
+			continue
+		}
+
+		if opt.operator == jsonSchema {
+			f.query = append(f.query, bson.E{Key: jsonSchema, Value: opt.value})
 			continue
 		}
 
