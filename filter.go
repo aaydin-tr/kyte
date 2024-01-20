@@ -28,10 +28,10 @@ const (
 	exists = "$exists"
 	_type  = "$type"
 	mod    = "$mod"
+	where  = "$where"
 
 	// TODO implement Day 1
 	// $jsonSchema
-	// $where
 	// $all
 	// $size
 
@@ -371,6 +371,18 @@ func (f *filter) Mod(field any, divisor int, remainder int) *filter {
 }
 
 /*
+Where use mongo [$where] operator to pass a javascript expression to the query system.
+
+	Filter().
+		Where("this.name === 'John'") // {"$where": "this.name === 'John'"}
+
+[$where]: https://www.mongodb.com/docs/manual/reference/operator/query/where/#mongodb-query-op.-where
+*/
+func (f *filter) Where(js string) *filter {
+	return f.set(where, nil, js)
+}
+
+/*
 Raw use raw bson.D and directly append it to the query. It is useful for using operators that are not implemented in this package.
 Raw will not provide any validation, so it is recommended to use it carefully.
 
@@ -387,6 +399,11 @@ Build returns the query as bson.M. If there is an error, it will return nil and 
 */
 func (f *filter) Build() (bson.D, error) {
 	for _, opt := range f.operations {
+		if opt.operator == where {
+			f.query = append(f.query, bson.E{Key: where, Value: opt.value})
+			continue
+		}
+
 		fieldName, err := f.kyte.validateQueryFieldAndValue(opt.field, opt.value)
 		if err != nil {
 			f.kyte.setError(err)
