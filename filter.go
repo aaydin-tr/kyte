@@ -30,10 +30,10 @@ const (
 	mod    = "$mod"
 	where  = "$where"
 	all    = "$all"
+	size   = "$size"
 
 	// TODO implement Day 1
 	// $jsonSchema
-	// $size
 
 	// TODO implement Day 2
 	// $elemMatch
@@ -397,6 +397,18 @@ func (f *filter) All(field any, value any) *filter {
 	}
 
 	return f.set(all, field, value)
+}
+
+/*
+Size use mongo [$size] operator to check if the field is an array that contains a specific number of elements.
+
+	Filter().
+		Size("name", 2) // {"name": {"$size": 2}}
+
+[$size]: https://www.mongodb.com/docs/manual/reference/operator/query/size/#mongodb-query-op.-size
+*/
+func (f *filter) Size(field any, value int) *filter {
+	return f.set(size, field, value)
 }
 
 /*
