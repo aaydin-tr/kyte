@@ -88,55 +88,73 @@ func (k *Kyte) setError(err error) {
 	k.errs = append(k.errs, err)
 }
 
-// TODO refactor this function
-func (k *Kyte) validateQueryFieldAndValue(field any, value any) (string, error) {
-	if len(k.errs) > 0 {
-		return "", k.errs[0]
+type operation struct {
+	operator        string
+	field           any
+	value           any
+	isFieldRequired bool
+	isValueRequired bool
+}
+
+func (k *Kyte) validate(opt *operation) error {
+	if k.hasErrors() {
+		return k.errs[0]
 	}
 
-	if value == nil {
-		return "", ErrNilValue
+	if opt.isFieldRequired && opt.field == nil {
+		return ErrNilField
 	}
 
-	if field == nil {
-		return "", ErrNilField
+	if opt.isValueRequired && opt.value == nil {
+		return ErrNilValue
+	}
+
+	if opt.isFieldRequired {
+		fieldType := reflect.TypeOf(opt.field)
+		if fieldType.Kind() != reflect.String && fieldType.Kind() != reflect.Ptr {
+			return ErrFieldMustBePtrOrString
+		}
+
+		if fieldType.Kind() == reflect.String && opt.field.(string) == "" {
+			return ErrEmptyField
+		}
+
+		if fieldType.Kind() == reflect.Pointer && opt.field == nil {
+			return ErrNilPointerField
+		}
+	}
+
+	if opt.isFieldRequired && (k.checkField && k.fields != nil) {
+		if err := k.isFieldValid(opt.field); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (k *Kyte) isFieldValid(field any) error {
+	if k.hasErrors() {
+		return k.errs[0]
 	}
 
 	fieldType := reflect.TypeOf(field)
-	if fieldType.Kind() != reflect.String && fieldType.Kind() != reflect.Ptr {
-		return "", ErrFieldMustBePtrOrString
+
+	fieldName := ""
+	if fieldType.Kind() == reflect.String {
+		fieldName = field.(string)
 	}
 
-	if fieldType.Kind() == reflect.String && field.(string) == "" {
-		return "", ErrEmptyField
+	ok := false
+	if fieldType.Kind() == reflect.Ptr {
+		_, ok = k.fields[field]
 	}
 
-	if fieldType.Kind() == reflect.Pointer && field == nil {
-		return "", ErrNilPointerField
+	if !ok && !contains(k.fieldNames, fieldName) {
+		return errors.Join(ErrNotValidFieldForQuery, errors.New(fmt.Sprintf("field: %s You can ignore this error by setting checkField to false", fieldName)))
 	}
 
-	if k.checkField && k.fields != nil {
-		fieldName := ""
-		if fieldType.Kind() == reflect.String {
-			fieldName = field.(string)
-		}
-
-		ok := false
-		if fieldType.Kind() == reflect.Ptr {
-			_, ok = k.fields[field]
-		}
-
-		if !ok && !contains(k.fieldNames, fieldName) {
-			return "", errors.Join(ErrNotValidFieldForQuery, errors.New(fmt.Sprintf("field: %s You can ignore this error by setting checkField to false", fieldName)))
-		}
-	}
-
-	fieldName, err := k.getFieldName(field)
-	if err != nil {
-		return "", err
-	}
-
-	return fieldName, nil
+	return nil
 }
 
 func (k *Kyte) hasErrors() bool {

@@ -50,12 +50,6 @@ const (
 	// $bitsAnySet
 )
 
-type operation struct {
-	operator string
-	field    any
-	value    any
-}
-
 type filter struct {
 	kyte       Kyte
 	query      bson.D
@@ -110,7 +104,7 @@ Equal use mongo [$eq] operator to compare field and value.
 [$eq]: https://www.mongodb.com/docs/manual/reference/operator/query/eq/#mongodb-query-op.-eq
 */
 func (f *filter) Equal(field any, value any) *filter {
-	return f.set(eq, field, value)
+	return f.set(eq, field, value, true, true)
 }
 
 /*
@@ -122,7 +116,7 @@ NotEqual use mongo [$ne] operator to compare field and value.
 [$ne]: https://www.mongodb.com/docs/manual/reference/operator/query/ne/#mongodb-query-op.-ne
 */
 func (f *filter) NotEqual(field any, value any) *filter {
-	return f.set(ne, field, value)
+	return f.set(ne, field, value, true, true)
 }
 
 /*
@@ -134,7 +128,7 @@ GreaterThan use mongo [$gt] operator to compare field and value.
 [$gt]: https://www.mongodb.com/docs/manual/reference/operator/query/gt/#mongodb-query-op.-gt
 */
 func (f *filter) GreaterThan(field any, value any) *filter {
-	return f.set(gt, field, value)
+	return f.set(gt, field, value, true, true)
 }
 
 /*
@@ -145,7 +139,7 @@ Example: GreaterThanOrEqual("age", 18) => {"age": {"$gte": 18}}
 [$gte]: https://www.mongodb.com/docs/manual/reference/operator/query/gte/#mongodb-query-op.-gte
 */
 func (f *filter) GreaterThanOrEqual(field any, value any) *filter {
-	return f.set(gte, field, value)
+	return f.set(gte, field, value, true, true)
 }
 
 /*
@@ -157,7 +151,7 @@ LessThan use mongo [$lt] operator to compare field and value.
 [$lt]: https://www.mongodb.com/docs/manual/reference/operator/query/lt/#mongodb-query-op.-lt
 */
 func (f *filter) LessThan(field any, value any) *filter {
-	return f.set(lt, field, value)
+	return f.set(lt, field, value, true, true)
 }
 
 /*
@@ -169,7 +163,7 @@ LessThanOrEqual use mongo [$lte] operator to compare field and value.
 [$lte]: https://www.mongodb.com/docs/manual/reference/operator/query/lte/#mongodb-query-op.-lte
 */
 func (f *filter) LessThanOrEqual(field any, value any) *filter {
-	return f.set(lte, field, value)
+	return f.set(lte, field, value, true, true)
 }
 
 /*
@@ -181,7 +175,7 @@ In use mongo [$in] operator to compare field and value.
 [$in]: https://www.mongodb.com/docs/manual/reference/operator/query/in/#mongodb-query-op.-in
 */
 func (f *filter) In(field any, value any) *filter {
-	return f.set(in, field, value)
+	return f.set(in, field, value, true, true)
 }
 
 /*
@@ -193,7 +187,7 @@ NotIn use mongo [$nin] operator to compare field and value.
 [$nin]: https://www.mongodb.com/docs/manual/reference/operator/query/nin/#mongodb-query-op.-nin
 */
 func (f *filter) NotIn(field any, value any) *filter {
-	return f.set(nin, field, value)
+	return f.set(nin, field, value, true, true)
 }
 
 /*
@@ -314,10 +308,10 @@ Regex use mongo [$regex] operator to compare field and value.
 */
 func (f *filter) Regex(field any, regex *regexp.Regexp, options ...string) *filter {
 	if len(options) == 0 {
-		return f.set(regx, field, bson.M{regx: regex.String()})
+		return f.set(regx, field, bson.M{regx: regex.String()}, true, true)
 	}
 
-	return f.set(regx, field, bson.M{regx: regex.String(), regxOptions: options[0]})
+	return f.set(regx, field, bson.M{regx: regex.String(), regxOptions: options[0]}, true, true)
 }
 
 /*
@@ -329,7 +323,7 @@ Exists use mongo [$exists] operator to check if the field exists.
 [$exists]: https://www.mongodb.com/docs/manual/reference/operator/query/exists/#mongodb-query-op.-exists
 */
 func (f *filter) Exists(field any, value bool) *filter {
-	return f.set(exists, field, value)
+	return f.set(exists, field, value, true, true)
 }
 
 /*
@@ -353,7 +347,7 @@ func (f *filter) Type(field any, values ...bsontype.Type) *filter {
 		}
 	}
 
-	return f.set(_type, field, values)
+	return f.set(_type, field, values, true, true)
 }
 
 /*
@@ -365,7 +359,7 @@ Mod use mongo [$mod] operator to check if the field is a multiple of a specified
 [$mod]: https://www.mongodb.com/docs/manual/reference/operator/query/mod/#mongodb-query-op.-mod
 */
 func (f *filter) Mod(field any, divisor int, remainder int) *filter {
-	return f.set(mod, field, bson.A{divisor, remainder})
+	return f.set(mod, field, bson.A{divisor, remainder}, true, true)
 }
 
 /*
@@ -377,7 +371,7 @@ Where use mongo [$where] operator to pass a javascript expression to the query s
 [$where]: https://www.mongodb.com/docs/manual/reference/operator/query/where/#mongodb-query-op.-where
 */
 func (f *filter) Where(js string) *filter {
-	return f.set(where, nil, js)
+	return f.set(where, nil, js, false, true)
 }
 
 /*
@@ -394,7 +388,7 @@ func (f *filter) All(field any, value any) *filter {
 		return f
 	}
 
-	return f.set(all, field, value)
+	return f.set(all, field, value, true, true)
 }
 
 /*
@@ -406,7 +400,7 @@ Size use mongo [$size] operator to check if the field is an array that contains 
 [$size]: https://www.mongodb.com/docs/manual/reference/operator/query/size/#mongodb-query-op.-size
 */
 func (f *filter) Size(field any, value int) *filter {
-	return f.set(size, field, value)
+	return f.set(size, field, value, true, true)
 }
 
 /*
@@ -418,7 +412,7 @@ JSONSchema use mongo [$jsonSchema] operator to validate documents against the gi
 [$jsonSchema]: https://www.mongodb.com/docs/manual/reference/operator/query/jsonSchema/#mongodb-query-op.-jsonSchema
 */
 func (f *filter) JSONSchema(schema bson.M) *filter {
-	return f.set(jsonSchema, nil, schema)
+	return f.set(jsonSchema, nil, schema, false, true)
 }
 
 /*
@@ -438,6 +432,12 @@ Build returns the query as bson.M. If there is an error, it will return nil and 
 */
 func (f *filter) Build() (bson.D, error) {
 	for _, opt := range f.operations {
+		err := f.kyte.validate(&opt)
+		if err != nil {
+			f.kyte.setError(err)
+			break
+		}
+
 		if opt.operator == where {
 			f.query = append(f.query, bson.E{Key: where, Value: opt.value})
 			continue
@@ -448,7 +448,7 @@ func (f *filter) Build() (bson.D, error) {
 			continue
 		}
 
-		fieldName, err := f.kyte.validateQueryFieldAndValue(opt.field, opt.value)
+		fieldName, err := f.kyte.getFieldName(opt.field)
 		if err != nil {
 			f.kyte.setError(err)
 			break
@@ -480,7 +480,14 @@ func (f *filter) Build() (bson.D, error) {
 	return f.query, nil
 }
 
-func (f *filter) set(operator string, field any, value any, opts ...any) *filter {
-	f.operations = append(f.operations, operation{operator: operator, field: field, value: value})
+func (f *filter) set(operator string, field any, value any, isFieldRequired bool, isValueRequired bool) *filter {
+	f.operations = append(f.operations, operation{
+		operator:        operator,
+		field:           field,
+		value:           value,
+		isFieldRequired: isFieldRequired,
+		isValueRequired: isValueRequired,
+	})
+
 	return f
 }
