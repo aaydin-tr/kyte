@@ -27,10 +27,10 @@ const (
 
 	exists = "$exists"
 	_type  = "$type"
+	mod    = "$mod"
 
 	// TODO implement Day 1
 	// $jsonSchema
-	// $mod
 	// $where
 	// $all
 	// $size
@@ -356,6 +356,18 @@ func (f *filter) Type(field any, values ...bsontype.Type) *filter {
 	}
 
 	return f.set(_type, field, values)
+}
+
+/*
+Mod use mongo [$mod] operator to check if the field is a multiple of a specified divisor.
+
+	Filter().
+		Mod("age", 2, 0) // {"age": {"$mod": [2, 0]}}
+
+[$mod]: https://www.mongodb.com/docs/manual/reference/operator/query/mod/#mongodb-query-op.-mod
+*/
+func (f *filter) Mod(field any, divisor int, remainder int) *filter {
+	return f.set(mod, field, bson.A{divisor, remainder})
 }
 
 /*
