@@ -1,4 +1,4 @@
-package main
+package kyte
 
 import (
 	"errors"
@@ -61,17 +61,84 @@ func (k *Kyte) setSourceAndPrepareFields(source any) {
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Type().Field(i)
 		fieldValue := v.Field(i)
-		if field.Anonymous {
+		kind := fieldValue.Kind()
+
+		if !field.IsExported() {
 			continue
 		}
 
 		bsonTag := getBsonTag(field)
-		if bsonTag != "" {
-			k.fields[fieldValue.Addr().Interface()] = bsonTag
+		if bsonTag == "" {
+			continue
+		}
+
+		var addr any
+		if fieldValue.CanAddr() && fieldValue.Addr().Interface() != nil {
+			addr = fieldValue.Addr().Interface()
+		}
+
+		if kind == reflect.Slice {
+			sliceType := fieldValue.Type().Elem()
+			if sliceType.Kind() == reflect.Ptr {
+				sliceType = sliceType.Elem()
+			}
+
+			if sliceType.Kind() == reflect.Struct {
+				if fieldValue.Len() > 0 {
+					firstElem := fieldValue.Index(0)
+					firstElemType := firstElem.Type()
+					if firstElemType.Kind() == reflect.Ptr {
+						firstElem = firstElem.Elem()
+					}
+
+					getSubStructFields(firstElem, bsonTag, k.fields)
+				} else {
+					sliceElem := reflect.New(sliceType).Elem()
+					getSubStructFields(sliceElem, bsonTag, k.fields)
+				}
+			}
+
+		}
+
+		if kind == reflect.Ptr {
+			underlyingValue := reflect.New(fieldValue.Type().Elem()).Elem()
+			underlyingKind := underlyingValue.Kind()
+			if underlyingKind == reflect.Struct {
+				getSubStructFields(fieldValue.Elem(), bsonTag, k.fields)
+			}
+
+			if underlyingKind == reflect.Slice {
+				underlyingValue = reflect.New(underlyingValue.Type().Elem()).Elem()
+				underlyingType := underlyingValue.Type()
+				underlyingKind = underlyingValue.Kind()
+				if underlyingKind == reflect.Ptr {
+					underlyingType = underlyingType.Elem()
+				}
+
+				if underlyingType.Kind() == reflect.Struct {
+					if !fieldValue.IsZero() && fieldValue.Elem().Len() > 0 {
+						firstElem := fieldValue.Elem().Index(0)
+						firstElemType := firstElem.Type()
+						if firstElemType.Kind() == reflect.Ptr {
+							firstElem = firstElem.Elem()
+						}
+						getSubStructFields(firstElem, bsonTag, k.fields)
+					} else {
+						sliceElem := reflect.New(underlyingType).Elem()
+						getSubStructFields(sliceElem, bsonTag, k.fields)
+					}
+				}
+
+			}
+
 		}
 
 		if field.Type.Kind() == reflect.Struct {
-			getSubStructFields(v.Field(i), bsonTag+".", k.fields)
+			getSubStructFields(v.Field(i), bsonTag, k.fields)
+		}
+
+		if bsonTag != "" && addr != nil {
+			k.fields[addr] = bsonTag
 		}
 	}
 
@@ -183,14 +250,14 @@ func (k *Kyte) getFieldName(field any) (string, error) {
 
 func getBsonTag(field reflect.StructField) string {
 	bsonTag := field.Tag.Get("bson")
-	if bsonTag == "" {
+	if bsonTag == "" || bsonTag == "-" {
 		return ""
 	}
 
 	splitBsonTag := strings.Split(bsonTag, ",")
 
 	for _, tag := range splitBsonTag {
-		if !contains(builtinTags, tag) {
+		if !contains(builtinTags, tag) || tag == "-" {
 			return tag
 		}
 	}
@@ -199,10 +266,14 @@ func getBsonTag(field reflect.StructField) string {
 }
 
 func getSubStructFields(s reflect.Value, parentPrefix string, fields map[any]string) {
+	if parentPrefix != "" {
+		parentPrefix += "."
+	}
+
 	for i := 0; i < s.NumField(); i++ {
 		field := s.Type().Field(i)
 		fieldValue := s.Field(i)
-		if field.Anonymous {
+		if !field.IsExported() {
 			continue
 		}
 
@@ -212,7 +283,7 @@ func getSubStructFields(s reflect.Value, parentPrefix string, fields map[any]str
 		}
 
 		bsonTag := getBsonTag(field)
-		if bsonTag != "" {
+		if bsonTag != "" && fieldValue.CanAddr() {
 			fields[fieldValue.Addr().Interface()] = parentPrefix + bsonTag
 		}
 	}
