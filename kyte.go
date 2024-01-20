@@ -24,6 +24,8 @@ var (
 	ErrFieldMustBeString = errors.New("field must be string")
 
 	ErrInvalidBsonType = errors.New("invalid bson type")
+
+	ErrValueMustBeSlice = errors.New("value must be slice")
 )
 
 type Kyte struct {

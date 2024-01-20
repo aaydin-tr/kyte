@@ -29,10 +29,10 @@ const (
 	_type  = "$type"
 	mod    = "$mod"
 	where  = "$where"
+	all    = "$all"
 
 	// TODO implement Day 1
 	// $jsonSchema
-	// $all
 	// $size
 
 	// TODO implement Day 2
@@ -380,6 +380,23 @@ Where use mongo [$where] operator to pass a javascript expression to the query s
 */
 func (f *filter) Where(js string) *filter {
 	return f.set(where, nil, js)
+}
+
+/*
+All use mongo [$all] operator to check if the field contains all of the specified elements.
+
+	Filter().
+		All("name", []string{"John", "Jane"}) // {"name": {"$all": ["John", "Jane"]}}
+
+[$all]: https://www.mongodb.com/docs/manual/reference/operator/query/all/#mongodb-query-op.-all
+*/
+func (f *filter) All(field any, value any) *filter {
+	if reflect.TypeOf(value).Kind() != reflect.Slice {
+		f.kyte.setError(ErrValueMustBeSlice)
+		return f
+	}
+
+	return f.set(all, field, value)
 }
 
 /*
