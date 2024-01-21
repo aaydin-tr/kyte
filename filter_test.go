@@ -400,3 +400,84 @@ func TestFilter_GreaterThanOrEqual(t *testing.T) {
 		}
 	})
 }
+
+func TestFilter_LessThan(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		q, err := Filter().LessThan("age", 10).Build()
+		if err != nil {
+			t.Errorf("Filter.LessThan should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.LessThan should not return nil")
+		}
+
+		if q[0].Key != "age" {
+			t.Errorf("Filter.LessThan should return key age, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$lt"] != 10 {
+			t.Errorf("Filter.LessThan should return value map[$lt:10], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("with source", func(t *testing.T) {
+		type Temp struct {
+			Age int `bson:"age"`
+		}
+		var temp Temp
+		q, err := Filter(Source(&temp)).LessThan(&temp.Age, 10).Build()
+		if err != nil {
+			t.Errorf("Filter.LessThan should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.LessThan should not return nil")
+		}
+
+		if q[0].Key != "age" {
+			t.Errorf("Filter.LessThan should return key age, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$lt"] != 10 {
+			t.Errorf("Filter.LessThan should return value map[$lt:10], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+			Age  int    `bson:"age"`
+		}
+
+		var temp Temp
+		q, err := Filter(Source(&temp)).
+			LessThan(&temp.Name, "Joe").
+			LessThan(&temp.Age, 10).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.LessThan should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.LessThan should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if v.Value.(bson.M)["$lt"] != "Joe" {
+					t.Errorf("Filter.LessThan should return value map[$lt:Joe], got %v", v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if v.Value.(bson.M)["$lt"] != 10 {
+					t.Errorf("Filter.LessThan should return value map[$lt:10], got %v", v.Value)
+				}
+			}
+		}
+	})
+}
