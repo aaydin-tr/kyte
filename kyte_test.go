@@ -375,3 +375,30 @@ func TestKyteErros(t *testing.T) {
 		}
 	})
 }
+
+func TestKyteHasErrors(t *testing.T) {
+	t.Parallel()
+	t.Run("with errors", func(t *testing.T) {
+		kyte := newKyte("str", true)
+		if !kyte.hasErrors() {
+			t.Errorf("kyte.hasErrors() should return true")
+		}
+	})
+
+	t.Run("without errors", func(t *testing.T) {
+		kyte := newKyte(nil, true)
+		if kyte.hasErrors() {
+			t.Errorf("kyte.hasErrors() should return false")
+		}
+	})
+}
+
+func TestKyteSetError(t *testing.T) {
+	t.Run("with error", func(t *testing.T) {
+		kyte := newKyte(nil, true)
+		kyte.setError(ErrNotPtrSource)
+		if kyte.Errors() == nil {
+			t.Errorf("kyte.Errors() should not be nil but got %v", kyte.Errors())
+		}
+	})
+}
