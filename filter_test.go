@@ -481,3 +481,84 @@ func TestFilter_LessThan(t *testing.T) {
 		}
 	})
 }
+
+func TestFilter_LessThanOrEqual(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		q, err := Filter().LessThanOrEqual("age", 10).Build()
+		if err != nil {
+			t.Errorf("Filter.LessThanOrEqual should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.LessThanOrEqual should not return nil")
+		}
+
+		if q[0].Key != "age" {
+			t.Errorf("Filter.LessThanOrEqual should return key age, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$lte"] != 10 {
+			t.Errorf("Filter.LessThanOrEqual should return value map[$lte:10], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("with source", func(t *testing.T) {
+		type Temp struct {
+			Age int `bson:"age"`
+		}
+		var temp Temp
+		q, err := Filter(Source(&temp)).LessThanOrEqual(&temp.Age, 10).Build()
+		if err != nil {
+			t.Errorf("Filter.LessThanOrEqual should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.LessThanOrEqual should not return nil")
+		}
+
+		if q[0].Key != "age" {
+			t.Errorf("Filter.LessThanOrEqual should return key age, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$lte"] != 10 {
+			t.Errorf("Filter.LessThanOrEqual should return value map[$lte:10], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+			Age  int    `bson:"age"`
+		}
+
+		var temp Temp
+		q, err := Filter(Source(&temp)).
+			LessThanOrEqual(&temp.Name, "Joe").
+			LessThanOrEqual(&temp.Age, 10).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.LessThanOrEqual should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.LessThanOrEqual should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if v.Value.(bson.M)["$lte"] != "Joe" {
+					t.Errorf("Filter.LessThanOrEqual should return value map[$lte:Joe], got %v", v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if v.Value.(bson.M)["$lte"] != 10 {
+					t.Errorf("Filter.LessThanOrEqual should return value map[$lte:10], got %v", v.Value)
+				}
+			}
+		}
+	})
+}
