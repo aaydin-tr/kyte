@@ -1,6 +1,7 @@
 package kyte
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -399,6 +400,92 @@ func TestKyteSetError(t *testing.T) {
 		kyte.setError(ErrNotPtrSource)
 		if kyte.Errors() == nil {
 			t.Errorf("kyte.Errors() should not be nil but got %v", kyte.Errors())
+		}
+	})
+}
+
+func TestKyteValidate(t *testing.T) {
+	t.Parallel()
+	t.Run("with errors", func(t *testing.T) {
+		kyte := newKyte("str", true)
+		err := kyte.validate(&operation{
+			field: "field",
+			value: "value"},
+		)
+		if err == nil {
+			t.Errorf("kyte.validate() should return error")
+		}
+	})
+
+	t.Run("field is required but nil", func(t *testing.T) {
+		kyte := newKyte(nil, true)
+		err := kyte.validate(&operation{
+			field:           nil,
+			value:           "value",
+			isFieldRequired: true,
+		})
+		if err != ErrNilField {
+			t.Errorf("kyte.validate() should return error %v but got %v", ErrNilField, err)
+		}
+	})
+
+	t.Run("value is required but nil", func(t *testing.T) {
+		kyte := newKyte(nil, true)
+		err := kyte.validate(&operation{
+			field:           "field",
+			value:           nil,
+			isValueRequired: true,
+		})
+		if err != ErrNilValue {
+			t.Errorf("kyte.validate() should return error %v but got %v", ErrNilValue, err)
+		}
+	})
+
+	t.Run("field is required but not string or pointer", func(t *testing.T) {
+		kyte := newKyte(nil, true)
+		err := kyte.validate(&operation{
+			field:           1,
+			value:           "value",
+			isFieldRequired: true,
+		})
+		if err != ErrFieldMustBePtrOrString {
+			t.Errorf("kyte.validate() should return error %v but got %v", ErrFieldMustBePtrOrString, err)
+		}
+	})
+
+	t.Run("field is required but string and empty", func(t *testing.T) {
+		kyte := newKyte(nil, true)
+		err := kyte.validate(&operation{
+			field:           "",
+			value:           "value",
+			isFieldRequired: true,
+		})
+		if err != ErrEmptyField {
+			t.Errorf("kyte.validate() should return error %v but got %v", ErrEmptyField, err)
+		}
+	})
+
+	t.Run("field is required and check field and field valid", func(t *testing.T) {
+		kyte := newKyte(&TestTodo{}, true)
+		err := kyte.validate(&operation{
+			field:           "name",
+			value:           "value",
+			isFieldRequired: true,
+		})
+		if err != nil {
+			t.Errorf("kyte.validate() should not return error but got %v", err)
+		}
+	})
+
+	t.Run("field is required and check field and field invalid", func(t *testing.T) {
+		kyte := newKyte(&TestTodo{}, true)
+		err := kyte.validate(&operation{
+			field:           "invalid",
+			value:           "value",
+			isFieldRequired: true,
+		})
+		if !errors.Is(err, ErrNotValidFieldForQuery) {
+			t.Errorf("kyte.validate() should return error %v but got %v", ErrNotValidFieldForQuery, err)
 		}
 	})
 }
