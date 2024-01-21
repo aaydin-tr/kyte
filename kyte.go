@@ -185,10 +185,6 @@ func (k *Kyte) validate(opt *operation) error {
 		if fieldType.Kind() == reflect.String && opt.field.(string) == "" {
 			return ErrEmptyField
 		}
-
-		if fieldType.Kind() == reflect.Pointer && opt.field == nil {
-			return ErrNilPointerField
-		}
 	}
 
 	if opt.isFieldRequired && (k.checkField && k.fields != nil) {
