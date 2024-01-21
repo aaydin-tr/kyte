@@ -51,7 +51,7 @@ const (
 )
 
 type filter struct {
-	kyte       Kyte
+	kyte       *Kyte
 	query      bson.D
 	operations []operation
 }
@@ -61,6 +61,8 @@ type FilterOptions struct {
 	source any
 
 	// ValidateField is true by default, it will check if the field is valid for query based on the source struct bson tags.
+	//
+	// Default: true
 	validateField bool
 }
 
@@ -82,7 +84,7 @@ func Source(source any) FilterOption {
 Filter creates a new filter instance.
 */
 func Filter(opts ...FilterOption) *filter {
-	options := &FilterOptions{}
+	options := &FilterOptions{validateField: true}
 	for _, opt := range opts {
 		opt(options)
 	}
@@ -90,7 +92,7 @@ func Filter(opts ...FilterOption) *filter {
 	kyte := newKyte(options.source, options.validateField)
 
 	return &filter{
-		kyte:  *kyte,
+		kyte:  kyte,
 		query: bson.D{},
 	}
 }
