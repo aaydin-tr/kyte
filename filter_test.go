@@ -1,7 +1,9 @@
 package kyte
 
 import (
+	"fmt"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -1142,4 +1144,165 @@ func TestFilter_NOR(t *testing.T) {
 			t.Error("Filter.NOR should return error")
 		}
 	})
+}
+
+func TestFilter_Regex(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		q, err := Filter().Regex("name", regexp.MustCompile("kyte")).Build()
+		if err != nil {
+			t.Errorf("Filter.Regex should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Regex should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Regex should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$regex"] != "kyte" {
+			t.Errorf("Filter.Regex should return value map[$regex:kyte], got %v", q[0].Value)
+		}
+		fmt.Println(q[0].Value)
+	})
+
+	t.Run("with source", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+		var temp Temp
+		q, err := Filter(Source(&temp)).Regex(&temp.Name, regexp.MustCompile("kyte")).Build()
+		if err != nil {
+			t.Errorf("Filter.Regex should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Regex should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Regex should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$regex"] != "kyte" {
+			t.Errorf("Filter.Regex should return value map[$regex:kyte], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+			Age  int    `bson:"age"`
+		}
+
+		var temp Temp
+		q, err := Filter(Source(&temp)).
+			Regex(&temp.Name, regexp.MustCompile("kyte")).
+			Regex(&temp.Age, regexp.MustCompile("10")).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Regex should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Regex should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if v.Value.(bson.M)["$regex"] != "kyte" {
+					t.Errorf("Filter.Regex should return value map[$regex:kyte], got %v", v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if v.Value.(bson.M)["$regex"] != "10" {
+					t.Errorf("Filter.Regex should return value map[$regex:10], got %v", v.Value)
+				}
+			}
+		}
+	})
+
+	t.Run("error on filter", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+		var temp Temp
+		_, err := Filter(Source(&temp)).Regex(nil, regexp.MustCompile("kyte")).Build()
+
+		if err == nil {
+			t.Error("Filter.Regex should return error")
+		}
+	})
+
+	t.Run("error on regex", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+		var temp Temp
+		_, err := Filter(Source(&temp)).Regex(&temp.Name, nil).Build()
+
+		if err != ErrRegexCannotBeNil {
+			t.Errorf("Filter.Regex should return error %v, got %v", ErrRegexCannotBeNil, err)
+		}
+	})
+
+	t.Run("with regex options", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+		var temp Temp
+		q, err := Filter(Source(&temp)).Regex(&temp.Name, regexp.MustCompile("kyte"), "i").Build()
+		if err != nil {
+			t.Errorf("Filter.Regex should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Regex should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Regex should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$regex"] != "kyte" {
+			t.Errorf("Filter.Regex should return value map[$regex:kyte], got %v", q[0].Value)
+		}
+
+		if q[0].Value.(bson.M)["$options"] != "i" {
+			t.Errorf("Filter.Regex should return value map[$options:i], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("with regex multiple options", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+		var temp Temp
+		q, err := Filter(Source(&temp)).Regex(&temp.Name, regexp.MustCompile("kyte"), "s", "i").Build()
+		if err != nil {
+			t.Errorf("Filter.Regex should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Regex should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Regex should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$regex"] != "kyte" {
+			t.Errorf("Filter.Regex should return value map[$regex:kyte], got %v", q[0].Value)
+		}
+
+		if q[0].Value.(bson.M)["$options"] != "s" {
+			t.Errorf("Filter.Regex should return value map[$options:s], got %v", q[0].Value)
+		}
+	})
+
 }
