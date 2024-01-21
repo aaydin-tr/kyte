@@ -1,6 +1,7 @@
 package kyte
 
 import (
+	"reflect"
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -561,4 +562,90 @@ func TestFilter_LessThanOrEqual(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestFilter_In(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		arr := []string{"kyte", "joe"}
+		q, err := Filter().In("name", arr).Build()
+		if err != nil {
+			t.Errorf("Filter.In should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.In should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.In should return key name, got %v", q[0].Key)
+		}
+
+		if !reflect.DeepEqual(q[0].Value.(bson.M)["$in"], arr) {
+			t.Errorf("Filter.In should return value %v, got %v", arr, q[0].Value)
+		}
+	})
+
+	t.Run("with source", func(t *testing.T) {
+		type Temp struct {
+			Name []string `bson:"name"`
+		}
+		var temp Temp
+		arr := []string{"kyte", "joe"}
+		q, err := Filter(Source(&temp)).In(&temp.Name, arr).Build()
+		if err != nil {
+			t.Errorf("Filter.In should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.In should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.In should return key name, got %v", q[0].Key)
+		}
+
+		if !reflect.DeepEqual(q[0].Value.(bson.M)["$in"], arr) {
+			t.Errorf("Filter.In should return value %v, got %v", arr, q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name []string `bson:"name"`
+			Age  []int    `bson:"age"`
+		}
+
+		var temp Temp
+		arrName := []string{"kyte", "joe"}
+		arrAge := []int{10, 20}
+		q, err := Filter(Source(&temp)).
+			In(&temp.Name, arrName).
+			In(&temp.Age, arrAge).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.In should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.In should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if !reflect.DeepEqual(v.Value.(bson.M)["$in"], arrName) {
+					t.Errorf("Filter.In should return value %v, got %v", arrName, v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if !reflect.DeepEqual(v.Value.(bson.M)["$in"], arrAge) {
+					t.Errorf("Filter.In should return value %v, got %v", arrAge, v.Value)
+				}
+			}
+		}
+	})
+
 }
