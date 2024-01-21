@@ -309,6 +309,11 @@ Regex use mongo [$regex] operator to compare field and value.
 [$regex]: https://www.mongodb.com/docs/manual/reference/operator/query/regex/#mongodb-query-op.-regex
 */
 func (f *filter) Regex(field any, regex *regexp.Regexp, options ...string) *filter {
+	if regex == nil {
+		f.kyte.setError(ErrRegexCannotBeNil)
+		return f
+	}
+
 	if len(options) == 0 {
 		return f.set(regx, field, bson.M{regx: regex.String()}, true, true)
 	}

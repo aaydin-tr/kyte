@@ -26,6 +26,7 @@ var (
 	ErrInvalidBsonType = errors.New("invalid bson type")
 
 	ErrValueMustBeSlice = errors.New("value must be slice")
+	ErrRegexCannotBeNil = errors.New("regex cannot be nil")
 )
 
 type Kyte struct {
