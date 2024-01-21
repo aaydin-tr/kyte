@@ -489,3 +489,43 @@ func TestKyteValidate(t *testing.T) {
 		}
 	})
 }
+
+func TestKyteIsFieldValid(t *testing.T) {
+	t.Parallel()
+
+	t.Run("with errors", func(t *testing.T) {
+		kyte := newKyte("str", true)
+		err := kyte.isFieldValid("field")
+		if err == nil {
+			t.Errorf("kyte.isFieldValid() should return error")
+		}
+	})
+
+	t.Run("string field and valid", func(t *testing.T) {
+		kyte := newKyte(&TestTodo{}, true)
+
+		err := kyte.isFieldValid("name")
+		if err != nil {
+			t.Errorf("kyte.isFieldValid() should not return error but got %v", err)
+		}
+	})
+
+	t.Run("string field and invalid", func(t *testing.T) {
+		kyte := newKyte(&TestTodo{}, true)
+
+		err := kyte.isFieldValid("invalid")
+		if !errors.Is(err, ErrNotValidFieldForQuery) {
+			t.Errorf("kyte.isFieldValid() should return error %v but got %v", ErrNotValidFieldForQuery, err)
+		}
+	})
+
+	t.Run("pointer field and valid", func(t *testing.T) {
+		todo := &TestTodo{}
+		kyte := newKyte(todo, true)
+
+		err := kyte.isFieldValid(&todo.Message)
+		if err != nil {
+			t.Errorf("kyte.isFieldValid() should not return error but got %v", err)
+		}
+	})
+}
