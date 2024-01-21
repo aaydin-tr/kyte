@@ -149,3 +149,92 @@ func TestFilter_Equal(t *testing.T) {
 
 	})
 }
+
+func TestFilter_NotEqual(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		q, err := Filter().NotEqual("name", "kyte").Build()
+		if err != nil {
+			t.Errorf("Filter.NotEqual should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.NotEqual should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.NotEqual should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$ne"] != "kyte" {
+			t.Errorf("Filter.NotEqual should return value map[$ne:kyte], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("with source", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+		var temp Temp
+		q, err := Filter(Source(&temp)).NotEqual(&temp.Name, "kyte").Build()
+		if err != nil {
+			t.Errorf("Filter.NotEqual should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.NotEqual should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.NotEqual should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$ne"] != "kyte" {
+			t.Errorf("Filter.NotEqual should return value map[$ne:kyte], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name    string `bson:"name"`
+			Surname string `bson:"surname"`
+			Age     int    `bson:"age"`
+		}
+
+		var temp Temp
+		q, err := Filter(Source(&temp)).
+			NotEqual(&temp.Name, "Joe").
+			NotEqual(&temp.Surname, "Doe").
+			NotEqual(&temp.Age, 10).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.NotEqual should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.NotEqual should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if v.Value.(bson.M)["$ne"] != "Joe" {
+					t.Errorf("Filter.NotEqual should return value map[$ne:Joe], got %v", v.Value)
+				}
+			}
+
+			if v.Key == "surname" {
+				if v.Value.(bson.M)["$ne"] != "Doe" {
+					t.Errorf("Filter.NotEqual should return value map[$ne:Doe], got %v", v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if v.Value.(bson.M)["$ne"] != 10 {
+					t.Errorf("Filter.NotEqual should return value map[$ne:10], got %v", v.Value)
+				}
+			}
+		}
+	})
+}
