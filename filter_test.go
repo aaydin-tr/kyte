@@ -649,3 +649,89 @@ func TestFilter_In(t *testing.T) {
 	})
 
 }
+
+func TestFilter_NotIn(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		arr := []string{"kyte", "joe"}
+		q, err := Filter().NotIn("name", arr).Build()
+		if err != nil {
+			t.Errorf("Filter.NotIn should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.NotIn should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.NotIn should return key name, got %v", q[0].Key)
+		}
+
+		if !reflect.DeepEqual(q[0].Value.(bson.M)["$nin"], arr) {
+			t.Errorf("Filter.NotIn should return value %v, got %v", arr, q[0].Value)
+		}
+	})
+
+	t.Run("with source", func(t *testing.T) {
+		type Temp struct {
+			Name []string `bson:"name"`
+		}
+		var temp Temp
+		arr := []string{"kyte", "joe"}
+		q, err := Filter(Source(&temp)).NotIn(&temp.Name, arr).Build()
+		if err != nil {
+			t.Errorf("Filter.NotIn should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.NotIn should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.NotIn should return key name, got %v", q[0].Key)
+		}
+
+		if !reflect.DeepEqual(q[0].Value.(bson.M)["$nin"], arr) {
+			t.Errorf("Filter.NotIn should return value %v, got %v", arr, q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name []string `bson:"name"`
+			Age  []int    `bson:"age"`
+		}
+
+		var temp Temp
+		arrName := []string{"kyte", "joe"}
+		arrAge := []int{10, 20}
+		q, err := Filter(Source(&temp)).
+			NotIn(&temp.Name, arrName).
+			NotIn(&temp.Age, arrAge).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.NotIn should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.NotIn should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if !reflect.DeepEqual(v.Value.(bson.M)["$nin"], arrName) {
+					t.Errorf("Filter.NotIn should return value %v, got %v", arrName, v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if !reflect.DeepEqual(v.Value.(bson.M)["$nin"], arrAge) {
+					t.Errorf("Filter.NotIn should return value %v, got %v", arrAge, v.Value)
+				}
+			}
+		}
+	})
+
+}
