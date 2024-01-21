@@ -529,3 +529,62 @@ func TestKyteIsFieldValid(t *testing.T) {
 		}
 	})
 }
+
+func TestKyteGetFieldName(t *testing.T) {
+	t.Parallel()
+
+	t.Run("string field", func(t *testing.T) {
+		kyte := newKyte(&TestTodo{}, true)
+		field, err := kyte.getFieldName("name")
+		if err != nil {
+			t.Errorf("kyte.getFieldName() should not return error but got %v", err)
+		}
+
+		if field != "name" {
+			t.Errorf("kyte.getFieldName() should return name but got %v", field)
+		}
+	})
+
+	t.Run("pointer field", func(t *testing.T) {
+		todo := &TestTodo{}
+		kyte := newKyte(todo, true)
+		field, err := kyte.getFieldName(&todo.Message)
+		if err != nil {
+			t.Errorf("kyte.getFieldName() should not return error but got %v", err)
+		}
+
+		if field != "message" {
+			t.Errorf("kyte.getFieldName() should return message but got %v", field)
+		}
+	})
+
+	t.Run("pointer field and not in fields", func(t *testing.T) {
+		type temp struct {
+			Temp string `bson:"temp"`
+		}
+		tempS := &temp{}
+		todo := &TestTodo{}
+		kyte := newKyte(todo, true)
+		_, err := kyte.getFieldName(&tempS.Temp)
+		if !errors.Is(err, ErrNotValidFieldForQuery) {
+			t.Errorf("kyte.getFieldName() should return error %v but got %v", ErrNotValidFieldForQuery, err)
+		}
+	})
+
+	t.Run("pointer field and field is nil", func(t *testing.T) {
+		todo := &TestTodo{}
+		kyte := newKyte(nil, false)
+		_, err := kyte.getFieldName(&todo.ID)
+		if err != ErrFieldMustBeString {
+			t.Errorf("kyte.getFieldName() should return error %v but got %v", ErrFieldMustBeString, err)
+		}
+	})
+
+	t.Run("field is not string or pointer", func(t *testing.T) {
+		kyte := newKyte(nil, false)
+		_, err := kyte.getFieldName(1)
+		if err != ErrFieldMustBePtrOrString {
+			t.Errorf("kyte.getFieldName() should return error %v but got %v", ErrFieldMustBePtrOrString, err)
+		}
+	})
+}
