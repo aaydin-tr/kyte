@@ -1241,3 +1241,58 @@ func TestFilter_Mod(t *testing.T) {
 		}
 	})
 }
+
+func TestFilter_Where(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		fn := "this.name == 'kyte'"
+		q, err := Filter().Where(fn).Build()
+		if err != nil {
+			t.Errorf("Filter.Where should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Where should not return nil")
+		}
+
+		if q[0].Key != "$where" {
+			t.Errorf("Filter.Where should return key $where, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(string) != fn {
+			t.Errorf("Filter.Where should return value %v, got %v", fn, q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+			Age  int    `bson:"age"`
+		}
+
+		var temp Temp
+		fn := "this.name == 'kyte'"
+		fn1 := "this.age == 10"
+		q, err := Filter(Source(&temp)).
+			Where(fn).
+			Where(fn1).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Where should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Where should not return nil")
+		}
+
+		fns := []string{fn, fn1}
+
+		for _, v := range q {
+			if !contains(fns, v.Value.(string)) {
+				t.Errorf("Filter.Where should return value %v, got %v", fns, v.Value)
+			}
+		}
+	})
+}
