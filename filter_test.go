@@ -1371,3 +1371,64 @@ func TestFilter_All(t *testing.T) {
 		}
 	})
 }
+
+func TestFilter_Size(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		size := 10
+		q, err := Filter().Size("name", size).Build()
+		if err != nil {
+			t.Errorf("Filter.Size should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Size should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Size should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$size"] != size {
+			t.Errorf("Filter.Size should return value %v, got %v", size, q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name []string `bson:"name"`
+			Age  []int    `bson:"age"`
+		}
+
+		var temp Temp
+		sizeName := 10
+		sizeAge := 20
+		q, err := Filter(Source(&temp)).
+			Size(&temp.Name, sizeName).
+			Size(&temp.Age, sizeAge).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Size should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Size should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if v.Value.(bson.M)["$size"] != sizeName {
+					t.Errorf("Filter.Size should return value %v, got %v", sizeName, v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if v.Value.(bson.M)["$size"] != sizeAge {
+					t.Errorf("Filter.Size should return value %v, got %v", sizeAge, v.Value)
+				}
+			}
+		}
+	})
+}
