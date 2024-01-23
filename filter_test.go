@@ -1560,3 +1560,248 @@ func TestFilter_Raw(t *testing.T) {
 		}
 	})
 }
+
+func TestFilter_Build(t *testing.T) {
+	t.Parallel()
+	targetQuery := bson.D{
+		{Key: "$or", Value: bson.A{
+			bson.M{"name": bson.M{"$eq": "kyte"}},
+			bson.M{"surname": bson.M{"$eq": "joe"}},
+		}},
+		{Key: "$and", Value: bson.A{
+			bson.M{"name": bson.M{"$eq": "kyte"}},
+			bson.M{"surname": bson.M{"$eq": "joe"}},
+		}},
+		{Key: "$nor", Value: bson.A{
+			bson.M{"name": bson.M{"$eq": "kyte"}},
+			bson.M{"surname": bson.M{"$eq": "joe"}},
+		}},
+		{Key: "name", Value: bson.M{"$eq": "kyte"}},
+		{Key: "surname", Value: bson.M{"$ne": "joe"}},
+		{Key: "age", Value: bson.M{"$gt": 10}},
+		{Key: "age", Value: bson.M{"$lt": 20}},
+		{Key: "tags", Value: bson.M{"$in": bson.A{"tag1", "tag2"}}},
+		{Key: "tags", Value: bson.M{"$nin": bson.A{"tag3", "tag4"}}},
+		{Key: "name", Value: bson.M{"$exists": true}},
+		{Key: "name", Value: bson.M{"$type": bson.A{bson.TypeString, bson.TypeInt32}}},
+		{Key: "age", Value: bson.M{"$mod": bson.A{10, 1}}},
+		{Key: "$where", Value: "this.name == 'kyte'"},
+		{Key: "name", Value: bson.M{"$all": bson.A{"kyte", "joe"}}},
+		{Key: "name", Value: bson.M{"$size": 10}},
+		{Key: "$jsonSchema", Value: bson.M{
+			"properties": bson.M{
+				"name": bson.M{
+					"type": "string",
+				},
+			},
+		}},
+	}
+
+	t.Run("without source", func(t *testing.T) {
+
+		q, err := Filter().
+			Equal("name", "kyte").
+			NotEqual("surname", "joe").
+			GreaterThan("age", 10).
+			LessThan("age", 20).
+			In("tags", []string{"tag1", "tag2"}).
+			NotIn("tags", []string{"tag3", "tag4"}).
+			Exists("name", true).
+			Type("name", bson.TypeString, bson.TypeInt32).
+			Mod("age", 10, 1).
+			Or(
+				Filter().
+					Equal("name", "kyte").
+					Equal("surname", "joe"),
+			).
+			And(
+				Filter().
+					Equal("name", "kyte").
+					Equal("surname", "joe"),
+			).
+			NOR(
+				Filter().
+					Equal("name", "kyte").
+					Equal("surname", "joe"),
+			).
+			Where("this.name == 'kyte'").
+			All("name", []string{"kyte", "joe"}).
+			Size("name", 10).
+			JSONSchema(bson.M{
+				"properties": bson.M{
+					"name": bson.M{
+						"type": "string",
+					},
+				},
+			}).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Build should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Build should not return nil")
+		}
+
+		qByte, err := bson.MarshalExtJSON(q, false, false)
+		if err != nil {
+			t.Errorf("Filter.Build should not return error: %v", err)
+		}
+
+		targetQueryByte, err := bson.MarshalExtJSON(targetQuery, false, false)
+		if err != nil {
+			t.Errorf("Filter.Build should not return error: %v", err)
+		}
+
+		if string(qByte) != string(targetQueryByte) {
+			t.Errorf("Filter.Build should return value %v, got %v", string(targetQueryByte), string(qByte))
+		}
+	})
+
+	t.Run("with source", func(t *testing.T) {
+
+		type Temp struct {
+			Name    string   `bson:"name"`
+			Age     int      `bson:"age"`
+			Tags    []string `bson:"tags"`
+			Surname string   `bson:"surname"`
+		}
+
+		var temp Temp
+		q, err := Filter(Source(&temp)).
+			Equal(&temp.Name, "kyte").
+			NotEqual(&temp.Surname, "joe").
+			GreaterThan(&temp.Age, 10).
+			LessThan(&temp.Age, 20).
+			In(&temp.Tags, []string{"tag1", "tag2"}).
+			NotIn(&temp.Tags, []string{"tag3", "tag4"}).
+			Exists(&temp.Name, true).
+			Type(&temp.Name, bson.TypeString, bson.TypeInt32).
+			Mod(&temp.Age, 10, 1).
+			Or(
+				Filter().
+					Equal(&temp.Name, "kyte").
+					Equal(&temp.Surname, "joe"),
+			).
+			And(
+				Filter().
+					Equal(&temp.Name, "kyte").
+					Equal(&temp.Surname, "joe"),
+			).
+			NOR(
+				Filter().
+					Equal(&temp.Name, "kyte").
+					Equal(&temp.Surname, "joe"),
+			).
+			Where("this.name == 'kyte'").
+			All(&temp.Name, []string{"kyte", "joe"}).
+			Size(&temp.Name, 10).
+			JSONSchema(bson.M{
+				"properties": bson.M{
+					"name": bson.M{
+						"type": "string",
+					},
+				},
+			}).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Build should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Build should not return nil")
+		}
+
+		qByte, err := bson.MarshalExtJSON(q, false, false)
+		if err != nil {
+			t.Errorf("Filter.Build should not return error: %v", err)
+		}
+
+		targetQueryByte, err := bson.MarshalExtJSON(targetQuery, false, false)
+		if err != nil {
+			t.Errorf("Filter.Build should not return error: %v", err)
+		}
+
+		if string(qByte) != string(targetQueryByte) {
+			t.Errorf("Filter.Build should return value %v, got %v", string(targetQueryByte), string(qByte))
+		}
+
+	})
+
+	t.Run("field not found", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+
+		type Temp1 struct {
+			Surname string `bson:"surname"`
+		}
+
+		var temp Temp
+		var temp1 Temp1
+		_, err := Filter(Source(&temp), ValidateField(false)).Equal(&temp1.Surname, "kyte").Build()
+
+		if err == nil {
+			t.Error("Filter.Build should return error")
+		}
+	})
+
+	t.Run("pointer value", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+
+		var temp Temp
+		str := "kyte"
+		q, err := Filter(Source(&temp)).Equal(&temp.Name, &str).Build()
+
+		if err != nil {
+			t.Errorf("Filter.Build should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Build should not return nil")
+		}
+
+		if q[0].Value.(bson.M)["$eq"] != str {
+			t.Errorf("Filter.Build should return value %v, got %v", str, q[0].Value)
+		}
+	})
+
+	t.Run("not slice value for $in, $nin or $type", func(t *testing.T) {
+		type Temp struct {
+			Name    string `bson:"name"`
+			Age     int    `bson:"age"`
+			Surname string `bson:"surname"`
+		}
+
+		var temp Temp
+		q, err := Filter(Source(&temp)).
+			In(&temp.Name, "kyte").
+			NotIn(&temp.Surname, "joe").
+			Type(&temp.Age, bson.TypeString).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Build should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Build should not return nil")
+		}
+
+		if q[0].Value.(bson.M)["$in"].(primitive.A)[0] != "kyte" {
+			t.Errorf("Filter.Build should return value %v, got %v", "kyte", q[0].Value)
+		}
+
+		if q[1].Value.(bson.M)["$nin"].(primitive.A)[0] != "joe" {
+			t.Errorf("Filter.Build should return value %v, got %v", "joe", q[1].Value)
+		}
+
+		if q[2].Value.(bson.M)["$type"].([]bsontype.Type)[0] != bson.TypeString {
+			t.Errorf("Filter.Build should return value %v, got %v", bson.TypeString, q[2].Value)
+		}
+	})
+}
