@@ -988,3 +988,63 @@ func TestFilter_Regex(t *testing.T) {
 	})
 
 }
+
+func TestFilter_Exists(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		q, err := Filter().Exists("name", true).Build()
+		if err != nil {
+			t.Errorf("Filter.Exists should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Exists should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Exists should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$exists"] != true {
+			t.Errorf("Filter.Exists should return value map[$exists:true], got %v", q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+			Age  int    `bson:"age"`
+		}
+
+		var temp Temp
+		isNameExists := true
+		isAgeExists := false
+		q, err := Filter(Source(&temp)).
+			Exists(&temp.Name, isNameExists).
+			Exists(&temp.Age, isAgeExists).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Exists should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Exists should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if v.Value.(bson.M)["$exists"] != isNameExists {
+					t.Errorf("Filter.Exists should return value %v, got %v", isNameExists, v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if v.Value.(bson.M)["$exists"] != isAgeExists {
+					t.Errorf("Filter.Exists should return value %v, got %v", isAgeExists, v.Value)
+				}
+			}
+		}
+	})
+}
