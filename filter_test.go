@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestFilter(t *testing.T) {
@@ -1162,5 +1163,81 @@ func TestFilter_Type(t *testing.T) {
 				t.Errorf("Filter.Type should return error %v, got %v", ErrInvalidBsonType, err)
 			}
 		})
+	})
+}
+
+func TestFilter_Mod(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		divisor := 10
+		remainder := 1
+		q, err := Filter().Mod("name", divisor, remainder).Build()
+		if err != nil {
+			t.Errorf("Filter.Mod should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Mod should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Mod should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$mod"].(primitive.A)[0].(int) != divisor {
+			t.Errorf("Filter.Mod should return value map[$mod:[%v %v]], got %v", divisor, remainder, q[0].Value)
+		}
+
+		if q[0].Value.(bson.M)["$mod"].(primitive.A)[1].(int) != remainder {
+			t.Errorf("Filter.Mod should return value map[$mod:[%v %v]], got %v", divisor, remainder, q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+			Age  int    `bson:"age"`
+		}
+
+		var temp Temp
+		divisor := 10
+		divisor1 := 20
+		remainder := 1
+		remainder1 := 2
+		q, err := Filter(Source(&temp)).
+			Mod(&temp.Name, divisor, remainder).
+			Mod(&temp.Age, divisor1, remainder1).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Mod should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Mod should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if v.Value.(bson.M)["$mod"].(primitive.A)[0].(int) != divisor {
+					t.Errorf("Filter.Mod should return value map[$mod:[%v %v]], got %v", divisor, remainder, v.Value)
+				}
+
+				if v.Value.(bson.M)["$mod"].(primitive.A)[1].(int) != remainder {
+					t.Errorf("Filter.Mod should return value map[$mod:[%v %v]], got %v", divisor, remainder, v.Value)
+				}
+			}
+
+			if v.Key == "age" {
+				if v.Value.(bson.M)["$mod"].(primitive.A)[0].(int) != divisor1 {
+					t.Errorf("Filter.Mod should return value map[$mod:[%v %v]], got %v", divisor1, remainder1, v.Value)
+				}
+
+				if v.Value.(bson.M)["$mod"].(primitive.A)[1].(int) != remainder1 {
+					t.Errorf("Filter.Mod should return value map[$mod:[%v %v]], got %v", divisor1, remainder1, v.Value)
+				}
+			}
+		}
 	})
 }
