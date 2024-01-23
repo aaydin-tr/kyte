@@ -1,12 +1,12 @@
 package kyte
 
 import (
-	"fmt"
 	"reflect"
 	"regexp"
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
 func TestFilter(t *testing.T) {
@@ -871,7 +871,6 @@ func TestFilter_Regex(t *testing.T) {
 		if q[0].Value.(bson.M)["$regex"] != "kyte" {
 			t.Errorf("Filter.Regex should return value map[$regex:kyte], got %v", q[0].Value)
 		}
-		fmt.Println(q[0].Value)
 	})
 
 	t.Run("multiple", func(t *testing.T) {
@@ -1046,5 +1045,122 @@ func TestFilter_Exists(t *testing.T) {
 				}
 			}
 		}
+	})
+}
+
+func TestFilter_Type(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		q, err := Filter().Type("name", bson.TypeString).Build()
+		if err != nil {
+			t.Errorf("Filter.Type should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Type should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Type should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$type"].([]bsontype.Type)[0] != bson.TypeString {
+			t.Errorf("Filter.Type should return value  %v, got %v", bson.TypeString, q[0].Value.(bson.M)["$type"].([]bsontype.Type)[0])
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+			Age  int    `bson:"age"`
+		}
+
+		var temp Temp
+		q, err := Filter(Source(&temp)).
+			Type(&temp.Name, bson.TypeString).
+			Type(&temp.Age, bson.TypeInt32).
+			Build()
+
+		if err != nil {
+			t.Errorf("Filter.Type should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Type should not return nil")
+		}
+
+		for _, v := range q {
+			if v.Key == "name" {
+				if v.Value.(bson.M)["$type"].([]bsontype.Type)[0] != bson.TypeString {
+					t.Errorf("Filter.Type should return value %v, got %v", bson.TypeString, v.Value.(bson.M)["$type"].([]bsontype.Type)[0])
+				}
+			}
+			if v.Key == "age" {
+				if v.Value.(bson.M)["$type"].([]bsontype.Type)[0] != bson.TypeInt32 {
+					t.Errorf("Filter.Type should return value  %v, got %v", bson.TypeInt32, v.Value.(bson.M)["$type"].([]bsontype.Type)[0])
+				}
+			}
+		}
+	})
+
+	t.Run("mutliple types", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+
+		var temp Temp
+		type1 := bson.TypeString
+		type2 := bson.TypeInt32
+		q, err := Filter(Source(&temp)).Type(&temp.Name, type1, type2).Build()
+		if err != nil {
+			t.Errorf("Filter.Type should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Type should not return nil")
+		}
+
+		if q[0].Key != "name" {
+			t.Errorf("Filter.Type should return key name, got %v", q[0].Key)
+		}
+
+		if q[0].Value.(bson.M)["$type"].([]bsontype.Type)[0] != type1 {
+			t.Errorf("Filter.Type should return value  %v, got %v", type1, q[0].Value.(bson.M)["$type"].([]bsontype.Type)[0])
+		}
+
+		if q[0].Value.(bson.M)["$type"].([]bsontype.Type)[1] != type2 {
+			t.Errorf("Filter.Type should return value  %v, got %v", type2, q[0].Value.(bson.M)["$type"].([]bsontype.Type)[1])
+		}
+	})
+
+	t.Run("invalid type", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("zero type", func(t *testing.T) {
+			type Temp struct {
+				Name string `bson:"name"`
+			}
+
+			var temp Temp
+			_, err := Filter(Source(&temp)).Type(&temp.Name).Build()
+
+			if err != ErrInvalidBsonType {
+				t.Errorf("Filter.Type should return error %v, got %v", ErrInvalidBsonType, err)
+			}
+		})
+
+		t.Run("invalid type", func(t *testing.T) {
+			type Temp struct {
+				Name string `bson:"name"`
+			}
+
+			var temp Temp
+			_, err := Filter(Source(&temp)).Type(&temp.Name, 100).Build()
+
+			if err != ErrInvalidBsonType {
+				t.Errorf("Filter.Type should return error %v, got %v", ErrInvalidBsonType, err)
+			}
+		})
 	})
 }
