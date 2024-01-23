@@ -46,7 +46,7 @@ type TestWithNestedStructWithPointer struct {
 	Todo     *TestTodo `bson:"todo"`
 }
 
-func testKyteFieldAndSource(t *testing.T, kyte *Kyte, fields map[any]string, errCount int, fieldCount int) {
+func testKyteFieldAndSource(t *testing.T, kyte *kyte, fields map[any]string, errCount int, fieldCount int) {
 	if len(kyte.fields) != fieldCount {
 		t.Errorf("kyte.fields should be %v but got %v", fieldCount, len(kyte.fields))
 	}

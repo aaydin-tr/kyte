@@ -51,7 +51,7 @@ const (
 )
 
 type filter struct {
-	kyte       *Kyte
+	kyte       *kyte
 	query      bson.D
 	operations []operation
 }

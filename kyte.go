@@ -29,7 +29,7 @@ var (
 	ErrRegexCannotBeNil = errors.New("regex cannot be nil")
 )
 
-type Kyte struct {
+type kyte struct {
 	source     any
 	fields     map[any]string
 	fieldNames []string
@@ -37,17 +37,17 @@ type Kyte struct {
 	checkField bool
 }
 
-func newKyte(source any, checkField bool) *Kyte {
+func newKyte(source any, checkField bool) *kyte {
 	if source == nil {
-		return &Kyte{}
+		return &kyte{}
 	}
-	kyte := &Kyte{fields: make(map[any]string), checkField: checkField}
+	kyte := &kyte{fields: make(map[any]string), checkField: checkField}
 	kyte.setSourceAndPrepareFields(source)
 	return kyte
 }
 
 // TODO refactor this function
-func (k *Kyte) setSourceAndPrepareFields(source any) {
+func (k *kyte) setSourceAndPrepareFields(source any) {
 	k.source = source
 	k.fields = make(map[any]string)
 	k.fieldNames = []string{}
@@ -148,11 +148,11 @@ func (k *Kyte) setSourceAndPrepareFields(source any) {
 	}
 }
 
-func (k *Kyte) Errors() []error {
+func (k *kyte) Errors() []error {
 	return k.errs
 }
 
-func (k *Kyte) setError(err error) {
+func (k *kyte) setError(err error) {
 	k.errs = append(k.errs, err)
 }
 
@@ -164,7 +164,7 @@ type operation struct {
 	isValueRequired bool
 }
 
-func (k *Kyte) validate(opt *operation) error {
+func (k *kyte) validate(opt *operation) error {
 	if k.hasErrors() {
 		return k.errs[0]
 	}
@@ -197,7 +197,7 @@ func (k *Kyte) validate(opt *operation) error {
 	return nil
 }
 
-func (k *Kyte) isFieldValid(field any) error {
+func (k *kyte) isFieldValid(field any) error {
 	if k.hasErrors() {
 		return k.errs[0]
 	}
@@ -221,11 +221,11 @@ func (k *Kyte) isFieldValid(field any) error {
 	return nil
 }
 
-func (k *Kyte) hasErrors() bool {
+func (k *kyte) hasErrors() bool {
 	return len(k.errs) > 0
 }
 
-func (k *Kyte) getFieldName(field any) (string, error) {
+func (k *kyte) getFieldName(field any) (string, error) {
 	if reflect.TypeOf(field).Kind() == reflect.String {
 		return field.(string), nil
 	}
