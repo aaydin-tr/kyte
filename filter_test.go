@@ -1432,3 +1432,85 @@ func TestFilter_Size(t *testing.T) {
 		}
 	})
 }
+
+func TestFilter_JSONSchema(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+
+		schema := bson.M{
+			"type": "object",
+			"properties": bson.M{
+				"name": bson.M{
+					"type": "string",
+				},
+			},
+		}
+
+		q, err := Filter().JSONSchema(schema).Build()
+		if err != nil {
+			t.Errorf("Filter.JSONSchema should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.JSONSchema should not return nil")
+		}
+
+		if q[0].Key != "$jsonSchema" {
+			t.Errorf("Filter.JSONSchema should return key $jsonSchema, got %v", q[0].Key)
+		}
+
+		if !reflect.DeepEqual(q[0].Value, schema) {
+			t.Errorf("Filter.JSONSchema should return value %v, got %v", schema, q[0].Value)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+
+		var temp Temp
+		schema1 := bson.M{
+			"type": "object",
+			"properties": bson.M{
+				"name": bson.M{
+					"type": "string",
+				},
+			},
+		}
+
+		schema2 := bson.M{
+			"type": "object",
+			"properties": bson.M{
+				"age": bson.M{
+					"type": "int",
+				},
+			},
+		}
+
+		q, err := Filter(Source(&temp)).JSONSchema(schema1).JSONSchema(schema2).Build()
+		if err != nil {
+			t.Errorf("Filter.JSONSchema should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.JSONSchema should not return nil")
+		}
+
+		// schemas := []bson.M{schema1, schema2}
+		for _, v := range q {
+			if v.Value.(bson.M)["properties"].(bson.M)["name"] != nil {
+				if !reflect.DeepEqual(v.Value.(bson.M), schema1) {
+					t.Errorf("Filter.JSONSchema should return value %v, got %v", schema1, v.Value)
+				}
+			}
+
+			if v.Value.(bson.M)["properties"].(bson.M)["age"] != nil {
+				if !reflect.DeepEqual(v.Value.(bson.M), schema2) {
+					t.Errorf("Filter.JSONSchema should return value %v, got %v", schema2, v.Value)
+				}
+			}
+		}
+	})
+}
