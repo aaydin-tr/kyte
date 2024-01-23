@@ -1514,3 +1514,49 @@ func TestFilter_JSONSchema(t *testing.T) {
 		}
 	})
 }
+
+func TestFilter_Raw(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without source", func(t *testing.T) {
+		raw := bson.D{{Key: "name", Value: "kyte"}}
+
+		q, err := Filter().Raw(raw).Build()
+		if err != nil {
+			t.Errorf("Filter.Raw should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Raw should not return nil")
+		}
+
+		if !reflect.DeepEqual(q, raw) {
+			t.Errorf("Filter.Raw should return value %v, got %v", raw, q)
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		type Temp struct {
+			Name string `bson:"name"`
+		}
+
+		var temp Temp
+		raw1 := bson.E{Key: "name", Value: "kyte"}
+		raw2 := bson.E{Key: "age", Value: 10}
+
+		q, err := Filter(Source(&temp)).Raw(bson.D{raw1}).Raw(bson.D{raw2}).Build()
+		if err != nil {
+			t.Errorf("Filter.Raw should not return error: %v", err)
+		}
+
+		if q == nil {
+			t.Error("Filter.Raw should not return nil")
+		}
+
+		raws := bson.D{raw1, raw2}
+
+		if !reflect.DeepEqual(q, raws) {
+			t.Errorf("Filter.Raw should return value %v, got %v", raws, q)
+		}
+	})
+}
