@@ -334,10 +334,13 @@ func (f *filter) Exists(field any, value bool) *filter {
 }
 
 /*
-Type use mongo [$type] operator to check if the field is of the specified type.
+Type use mongo [$type] operator to check if the field is of the specified type. It accepts multiple types.
 
 	Filter().
-		Type("name", bsontype.String) // {"name": {"$type": 0x02}}
+		Type("name", bsontype.String) // {"name": {"$type": "string"}}
+
+	Filter().
+		Type("name", bsontype.String, bsontype.Null) // {"name": {"$type": ["string", "null"]}}
 
 [$type]: https://www.mongodb.com/docs/manual/reference/operator/query/type/#mongodb-query-op.-type
 */
@@ -466,7 +469,7 @@ func (f *filter) Build() (bson.D, error) {
 			opt.value = reflect.ValueOf(opt.value).Elem().Interface()
 		}
 
-		if opt.operator == in || opt.operator == nin {
+		if opt.operator == in || opt.operator == nin || opt.operator == _type {
 			if valueType.Kind() != reflect.Slice {
 				opt.value = bson.A{opt.value}
 			}
