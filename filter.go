@@ -33,7 +33,7 @@ const (
 	size       = "$size"
 	jsonSchema = "$jsonSchema"
 
-	// TODO implement Day 2
+	// TODO implement Day 1
 	// $elemMatch
 	// $not
 
