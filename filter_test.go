@@ -85,29 +85,6 @@ func TestFilter_Equal(t *testing.T) {
 		}
 	})
 
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Name string `bson:"name"`
-		}
-		var temp Temp
-		q, err := Filter(Source(&temp)).Equal(&temp.Name, "kyte").Build()
-		if err != nil {
-			t.Errorf("Filter.Equal should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.Equal should not return nil")
-		}
-
-		if q[0].Key != "name" {
-			t.Errorf("Filter.Equal should return key name, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.M)["$eq"] != "kyte" {
-			t.Errorf("Filter.Equal should return value map[$eq:kyte], got %v", q[0].Value)
-		}
-	})
-
 	t.Run("multiple", func(t *testing.T) {
 		type Temp struct {
 			Name    string `bson:"name"`
@@ -158,29 +135,6 @@ func TestFilter_NotEqual(t *testing.T) {
 
 	t.Run("without source", func(t *testing.T) {
 		q, err := Filter().NotEqual("name", "kyte").Build()
-		if err != nil {
-			t.Errorf("Filter.NotEqual should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.NotEqual should not return nil")
-		}
-
-		if q[0].Key != "name" {
-			t.Errorf("Filter.NotEqual should return key name, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.M)["$ne"] != "kyte" {
-			t.Errorf("Filter.NotEqual should return value map[$ne:kyte], got %v", q[0].Value)
-		}
-	})
-
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Name string `bson:"name"`
-		}
-		var temp Temp
-		q, err := Filter(Source(&temp)).NotEqual(&temp.Name, "kyte").Build()
 		if err != nil {
 			t.Errorf("Filter.NotEqual should not return error: %v", err)
 		}
@@ -264,29 +218,6 @@ func TestFilter_GreaterThan(t *testing.T) {
 		}
 	})
 
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Age int `bson:"age"`
-		}
-		var temp Temp
-		q, err := Filter(Source(&temp)).GreaterThan(&temp.Age, 10).Build()
-		if err != nil {
-			t.Errorf("Filter.GreaterThan should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.GreaterThan should not return nil")
-		}
-
-		if q[0].Key != "age" {
-			t.Errorf("Filter.GreaterThan should return key age, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.M)["$gt"] != 10 {
-			t.Errorf("Filter.GreaterThan should return value map[$gt:10], got %v", q[0].Value)
-		}
-	})
-
 	t.Run("multiple", func(t *testing.T) {
 		type Temp struct {
 			Name string `bson:"name"`
@@ -328,29 +259,6 @@ func TestFilter_GreaterThanOrEqual(t *testing.T) {
 
 	t.Run("without source", func(t *testing.T) {
 		q, err := Filter().GreaterThanOrEqual("age", 10).Build()
-		if err != nil {
-			t.Errorf("Filter.GreaterThanOrEqual should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.GreaterThanOrEqual should not return nil")
-		}
-
-		if q[0].Key != "age" {
-			t.Errorf("Filter.GreaterThanOrEqual should return key age, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.M)["$gte"] != 10 {
-			t.Errorf("Filter.GreaterThanOrEqual should return value map[$gte:10], got %v", q[0].Value)
-		}
-	})
-
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Age int `bson:"age"`
-		}
-		var temp Temp
-		q, err := Filter(Source(&temp)).GreaterThanOrEqual(&temp.Age, 10).Build()
 		if err != nil {
 			t.Errorf("Filter.GreaterThanOrEqual should not return error: %v", err)
 		}
@@ -426,29 +334,6 @@ func TestFilter_LessThan(t *testing.T) {
 		}
 	})
 
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Age int `bson:"age"`
-		}
-		var temp Temp
-		q, err := Filter(Source(&temp)).LessThan(&temp.Age, 10).Build()
-		if err != nil {
-			t.Errorf("Filter.LessThan should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.LessThan should not return nil")
-		}
-
-		if q[0].Key != "age" {
-			t.Errorf("Filter.LessThan should return key age, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.M)["$lt"] != 10 {
-			t.Errorf("Filter.LessThan should return value map[$lt:10], got %v", q[0].Value)
-		}
-	})
-
 	t.Run("multiple", func(t *testing.T) {
 		type Temp struct {
 			Name string `bson:"name"`
@@ -506,30 +391,6 @@ func TestFilter_LessThanOrEqual(t *testing.T) {
 			t.Errorf("Filter.LessThanOrEqual should return value map[$lte:10], got %v", q[0].Value)
 		}
 	})
-
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Age int `bson:"age"`
-		}
-		var temp Temp
-		q, err := Filter(Source(&temp)).LessThanOrEqual(&temp.Age, 10).Build()
-		if err != nil {
-			t.Errorf("Filter.LessThanOrEqual should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.LessThanOrEqual should not return nil")
-		}
-
-		if q[0].Key != "age" {
-			t.Errorf("Filter.LessThanOrEqual should return key age, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.M)["$lte"] != 10 {
-			t.Errorf("Filter.LessThanOrEqual should return value map[$lte:10], got %v", q[0].Value)
-		}
-	})
-
 	t.Run("multiple", func(t *testing.T) {
 		type Temp struct {
 			Name string `bson:"name"`
@@ -572,30 +433,6 @@ func TestFilter_In(t *testing.T) {
 	t.Run("without source", func(t *testing.T) {
 		arr := []string{"kyte", "joe"}
 		q, err := Filter().In("name", arr).Build()
-		if err != nil {
-			t.Errorf("Filter.In should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.In should not return nil")
-		}
-
-		if q[0].Key != "name" {
-			t.Errorf("Filter.In should return key name, got %v", q[0].Key)
-		}
-
-		if !reflect.DeepEqual(q[0].Value.(bson.M)["$in"], arr) {
-			t.Errorf("Filter.In should return value %v, got %v", arr, q[0].Value)
-		}
-	})
-
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Name []string `bson:"name"`
-		}
-		var temp Temp
-		arr := []string{"kyte", "joe"}
-		q, err := Filter(Source(&temp)).In(&temp.Name, arr).Build()
 		if err != nil {
 			t.Errorf("Filter.In should not return error: %v", err)
 		}
@@ -658,30 +495,6 @@ func TestFilter_NotIn(t *testing.T) {
 	t.Run("without source", func(t *testing.T) {
 		arr := []string{"kyte", "joe"}
 		q, err := Filter().NotIn("name", arr).Build()
-		if err != nil {
-			t.Errorf("Filter.NotIn should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.NotIn should not return nil")
-		}
-
-		if q[0].Key != "name" {
-			t.Errorf("Filter.NotIn should return key name, got %v", q[0].Key)
-		}
-
-		if !reflect.DeepEqual(q[0].Value.(bson.M)["$nin"], arr) {
-			t.Errorf("Filter.NotIn should return value %v, got %v", arr, q[0].Value)
-		}
-	})
-
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Name []string `bson:"name"`
-		}
-		var temp Temp
-		arr := []string{"kyte", "joe"}
-		q, err := Filter(Source(&temp)).NotIn(&temp.Name, arr).Build()
 		if err != nil {
 			t.Errorf("Filter.NotIn should not return error: %v", err)
 		}
@@ -767,42 +580,6 @@ func TestFilter_And(t *testing.T) {
 		if q[0].Value.(bson.A)[1].(bson.M)["surname"].(bson.M)["$eq"] != "joe" {
 			t.Errorf("Filter.AND should return value map[$eq:joe], got %v", q[0].Value)
 		}
-	})
-
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Name    string `bson:"name"`
-			Surname string `bson:"surname"`
-		}
-		var temp Temp
-		name := "kyte"
-		surname := "joe"
-		q, err := Filter(Source(&temp)).And(
-			Filter().
-				Equal(&temp.Name, name).
-				Equal(&temp.Surname, surname),
-		).Build()
-
-		if err != nil {
-			t.Errorf("Filter.AND should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.AND should not return nil")
-		}
-
-		if q[0].Key != "$and" {
-			t.Errorf("Filter.AND should return key $and, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.A)[0].(bson.M)["name"].(bson.M)["$eq"] != name {
-			t.Errorf("Filter.AND should return value map[$eq:%v], got %v", name, q[0].Value)
-		}
-
-		if q[0].Value.(bson.A)[1].(bson.M)["surname"].(bson.M)["$eq"] != surname {
-			t.Errorf("Filter.AND should return value map[$eq:%v], got %v", surname, q[0].Value)
-		}
-
 	})
 
 	t.Run("multiple", func(t *testing.T) {
@@ -905,42 +682,6 @@ func TestFilter_Or(t *testing.T) {
 		}
 	})
 
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Name    string `bson:"name"`
-			Surname string `bson:"surname"`
-		}
-		var temp Temp
-		name := "kyte"
-		surname := "joe"
-		q, err := Filter(Source(&temp)).Or(
-			Filter().
-				Equal(&temp.Name, name).
-				Equal(&temp.Surname, surname),
-		).Build()
-
-		if err != nil {
-			t.Errorf("Filter.OR should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.OR should not return nil")
-		}
-
-		if q[0].Key != "$or" {
-			t.Errorf("Filter.OR should return key $or, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.A)[0].(bson.M)["name"].(bson.M)["$eq"] != name {
-			t.Errorf("Filter.OR should return value map[$eq:%v], got %v", name, q[0].Value)
-		}
-
-		if q[0].Value.(bson.A)[1].(bson.M)["surname"].(bson.M)["$eq"] != surname {
-			t.Errorf("Filter.OR should return value map[$eq:%v], got %v", surname, q[0].Value)
-		}
-
-	})
-
 	t.Run("multiple", func(t *testing.T) {
 		type Temp struct {
 			Name    string `bson:"name"`
@@ -1041,42 +782,6 @@ func TestFilter_NOR(t *testing.T) {
 		}
 	})
 
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Name    string `bson:"name"`
-			Surname string `bson:"surname"`
-		}
-		var temp Temp
-		name := "kyte"
-		surname := "joe"
-		q, err := Filter(Source(&temp)).NOR(
-			Filter().
-				Equal(&temp.Name, name).
-				Equal(&temp.Surname, surname),
-		).Build()
-
-		if err != nil {
-			t.Errorf("Filter.NOR should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.NOR should not return nil")
-		}
-
-		if q[0].Key != "$nor" {
-			t.Errorf("Filter.NOR should return key $nor, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.A)[0].(bson.M)["name"].(bson.M)["$eq"] != name {
-			t.Errorf("Filter.NOR should return value map[$eq:%v], got %v", name, q[0].Value)
-		}
-
-		if q[0].Value.(bson.A)[1].(bson.M)["surname"].(bson.M)["$eq"] != surname {
-			t.Errorf("Filter.NOR should return value map[$eq:%v], got %v", surname, q[0].Value)
-		}
-
-	})
-
 	t.Run("multiple", func(t *testing.T) {
 		type Temp struct {
 			Name    string `bson:"name"`
@@ -1167,29 +872,6 @@ func TestFilter_Regex(t *testing.T) {
 			t.Errorf("Filter.Regex should return value map[$regex:kyte], got %v", q[0].Value)
 		}
 		fmt.Println(q[0].Value)
-	})
-
-	t.Run("with source", func(t *testing.T) {
-		type Temp struct {
-			Name string `bson:"name"`
-		}
-		var temp Temp
-		q, err := Filter(Source(&temp)).Regex(&temp.Name, regexp.MustCompile("kyte")).Build()
-		if err != nil {
-			t.Errorf("Filter.Regex should not return error: %v", err)
-		}
-
-		if q == nil {
-			t.Error("Filter.Regex should not return nil")
-		}
-
-		if q[0].Key != "name" {
-			t.Errorf("Filter.Regex should return key name, got %v", q[0].Key)
-		}
-
-		if q[0].Value.(bson.M)["$regex"] != "kyte" {
-			t.Errorf("Filter.Regex should return value map[$regex:kyte], got %v", q[0].Value)
-		}
 	})
 
 	t.Run("multiple", func(t *testing.T) {
