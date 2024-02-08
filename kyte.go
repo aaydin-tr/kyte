@@ -29,6 +29,37 @@ var (
 	ErrRegexCannotBeNil = errors.New("regex cannot be nil")
 )
 
+const (
+	// Alias for mongo _id field
+	UnderScoreID = "_id"
+	// Alias for mongo _id field with dollar sign prefix
+	UnderScoreIDWithDollar = "$_id"
+)
+
+type Options struct {
+	// Source is the struct that will be used to check if the field is valid for query based on the struct bson tags.
+	source any
+
+	// ValidateField is true by default, it will check if the field is valid for query based on the source struct bson tags.
+	//
+	// Default: true
+	validateField bool
+}
+
+type OptionFunc func(*Options)
+
+func ValidateField(validateField bool) OptionFunc {
+	return func(o *Options) {
+		o.validateField = validateField
+	}
+}
+
+func Source(source any) OptionFunc {
+	return func(o *Options) {
+		o.source = source
+	}
+}
+
 type kyte struct {
 	source     any
 	fields     map[any]string

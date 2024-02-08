@@ -56,35 +56,11 @@ type filter struct {
 	operations []operation
 }
 
-type FilterOptions struct {
-	// Source is the struct that will be used to check if the field is valid for query based on the struct bson tags.
-	source any
-
-	// ValidateField is true by default, it will check if the field is valid for query based on the source struct bson tags.
-	//
-	// Default: true
-	validateField bool
-}
-
-type FilterOption func(*FilterOptions)
-
-func ValidateField(validateField bool) FilterOption {
-	return func(o *FilterOptions) {
-		o.validateField = validateField
-	}
-}
-
-func Source(source any) FilterOption {
-	return func(o *FilterOptions) {
-		o.source = source
-	}
-}
-
 /*
 Filter creates a new filter instance.
 */
-func Filter(opts ...FilterOption) *filter {
-	options := &FilterOptions{validateField: true}
+func Filter(opts ...OptionFunc) *filter {
+	options := &Options{validateField: true}
 	for _, opt := range opts {
 		opt(options)
 	}
