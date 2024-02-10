@@ -1,74 +1,21 @@
-package kyte
+package kyte_test
 
 import (
 	"reflect"
 	"regexp"
 	"testing"
 
+	"github.com/aaydin-tr/kyte"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestFilter(t *testing.T) {
-	t.Parallel()
-
-	t.Run("without options", func(t *testing.T) {
-		filter := Filter()
-		if filter == nil {
-			t.Error("Filter should not be nil")
-		}
-
-		if filter.kyte.source != nil {
-			t.Error("Filter.kyte should be nil")
-		}
-
-		if filter.kyte.checkField != false {
-			t.Error("Filter.kyte.checkField should be false")
-		}
-	})
-
-	t.Run("with options", func(t *testing.T) {
-		type Temp struct {
-			Name string `bson:"name"`
-		}
-
-		filter := Filter(Source(&Temp{}), ValidateField(true))
-		if filter == nil {
-			t.Error("Filter should not be nil")
-		}
-
-		if filter.kyte.source == nil {
-			t.Error("Filter.kyte should not be nil")
-		}
-
-		if filter.kyte.checkField != true {
-			t.Error("Filter.kyte.checkField should be true")
-		}
-	})
-
-	t.Run("with validate field is false", func(t *testing.T) {
-		filter := Filter(ValidateField(false))
-		if filter == nil {
-			t.Error("Filter should not be nil")
-		}
-
-		if filter.kyte.source != nil {
-			t.Error("Filter.kyte should be nil")
-		}
-
-		if filter.kyte.checkField != false {
-			t.Error("Filter.kyte.checkField should be false")
-		}
-	})
-
-}
-
 func TestFilter_Equal(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().Equal("name", "kyte").Build()
+		q, err := kyte.Filter().Equal("name", "kyte").Build()
 		if err != nil {
 			t.Errorf("Filter.Equal should not return error: %v", err)
 		}
@@ -94,7 +41,7 @@ func TestFilter_Equal(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Equal(&temp.Name, "Joe").
 			Equal(&temp.Surname, "Doe").
 			Equal(&temp.Age, 10).
@@ -135,7 +82,7 @@ func TestFilter_NotEqual(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().NotEqual("name", "kyte").Build()
+		q, err := kyte.Filter().NotEqual("name", "kyte").Build()
 		if err != nil {
 			t.Errorf("Filter.NotEqual should not return error: %v", err)
 		}
@@ -161,7 +108,7 @@ func TestFilter_NotEqual(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			NotEqual(&temp.Name, "Joe").
 			NotEqual(&temp.Surname, "Doe").
 			NotEqual(&temp.Age, 10).
@@ -201,7 +148,7 @@ func TestFilter_GreaterThan(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().GreaterThan("age", 10).Build()
+		q, err := kyte.Filter().GreaterThan("age", 10).Build()
 		if err != nil {
 			t.Errorf("Filter.GreaterThan should not return error: %v", err)
 		}
@@ -226,7 +173,7 @@ func TestFilter_GreaterThan(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			GreaterThan(&temp.Name, "Joe").
 			GreaterThan(&temp.Age, 10).
 			Build()
@@ -259,7 +206,7 @@ func TestFilter_GreaterThanOrEqual(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().GreaterThanOrEqual("age", 10).Build()
+		q, err := kyte.Filter().GreaterThanOrEqual("age", 10).Build()
 		if err != nil {
 			t.Errorf("Filter.GreaterThanOrEqual should not return error: %v", err)
 		}
@@ -284,7 +231,7 @@ func TestFilter_GreaterThanOrEqual(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			GreaterThanOrEqual(&temp.Name, "Joe").
 			GreaterThanOrEqual(&temp.Age, 10).
 			Build()
@@ -317,7 +264,7 @@ func TestFilter_LessThan(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().LessThan("age", 10).Build()
+		q, err := kyte.Filter().LessThan("age", 10).Build()
 		if err != nil {
 			t.Errorf("Filter.LessThan should not return error: %v", err)
 		}
@@ -342,7 +289,7 @@ func TestFilter_LessThan(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			LessThan(&temp.Name, "Joe").
 			LessThan(&temp.Age, 10).
 			Build()
@@ -375,7 +322,7 @@ func TestFilter_LessThanOrEqual(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().LessThanOrEqual("age", 10).Build()
+		q, err := kyte.Filter().LessThanOrEqual("age", 10).Build()
 		if err != nil {
 			t.Errorf("Filter.LessThanOrEqual should not return error: %v", err)
 		}
@@ -399,7 +346,7 @@ func TestFilter_LessThanOrEqual(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			LessThanOrEqual(&temp.Name, "Joe").
 			LessThanOrEqual(&temp.Age, 10).
 			Build()
@@ -433,7 +380,7 @@ func TestFilter_In(t *testing.T) {
 
 	t.Run("without source", func(t *testing.T) {
 		arr := []string{"kyte", "joe"}
-		q, err := Filter().In("name", arr).Build()
+		q, err := kyte.Filter().In("name", arr).Build()
 		if err != nil {
 			t.Errorf("Filter.In should not return error: %v", err)
 		}
@@ -460,7 +407,7 @@ func TestFilter_In(t *testing.T) {
 		var temp Temp
 		arrName := []string{"kyte", "joe"}
 		arrAge := []int{10, 20}
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			In(&temp.Name, arrName).
 			In(&temp.Age, arrAge).
 			Build()
@@ -495,7 +442,7 @@ func TestFilter_NotIn(t *testing.T) {
 
 	t.Run("without source", func(t *testing.T) {
 		arr := []string{"kyte", "joe"}
-		q, err := Filter().NotIn("name", arr).Build()
+		q, err := kyte.Filter().NotIn("name", arr).Build()
 		if err != nil {
 			t.Errorf("Filter.NotIn should not return error: %v", err)
 		}
@@ -522,7 +469,7 @@ func TestFilter_NotIn(t *testing.T) {
 		var temp Temp
 		arrName := []string{"kyte", "joe"}
 		arrAge := []int{10, 20}
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			NotIn(&temp.Name, arrName).
 			NotIn(&temp.Age, arrAge).
 			Build()
@@ -556,8 +503,8 @@ func TestFilter_And(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().And(
-			Filter().
+		q, err := kyte.Filter().And(
+			kyte.Filter().
 				Equal("name", "kyte").
 				Equal("surname", "joe"),
 		).Build()
@@ -593,14 +540,14 @@ func TestFilter_And(t *testing.T) {
 		name := "kyte"
 		surname := "joe"
 		age := 10
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			And(
-				Filter().
+				kyte.Filter().
 					Equal(&temp.Name, name).
 					Equal(&temp.Surname, surname),
 			).
 			And(
-				Filter().
+				kyte.Filter().
 					GreaterThan(&temp.Age, age),
 			).
 			Build()
@@ -641,8 +588,8 @@ func TestFilter_And(t *testing.T) {
 		}
 		var temp Temp
 		name := "kyte"
-		_, err := Filter(Source(&temp)).And(
-			Filter().
+		_, err := kyte.Filter(kyte.Source(&temp)).And(
+			kyte.Filter().
 				Equal(nil, name),
 		).Build()
 
@@ -656,8 +603,8 @@ func TestFilter_Or(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().Or(
-			Filter().
+		q, err := kyte.Filter().Or(
+			kyte.Filter().
 				Equal("name", "kyte").
 				Equal("surname", "joe"),
 		).Build()
@@ -693,14 +640,14 @@ func TestFilter_Or(t *testing.T) {
 		name := "kyte"
 		surname := "joe"
 		age := 10
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Or(
-				Filter().
+				kyte.Filter().
 					Equal(&temp.Name, name).
 					Equal(&temp.Surname, surname),
 			).
 			Or(
-				Filter().
+				kyte.Filter().
 					GreaterThan(&temp.Age, age),
 			).
 			Build()
@@ -741,8 +688,8 @@ func TestFilter_Or(t *testing.T) {
 		}
 		var temp Temp
 		name := "kyte"
-		_, err := Filter(Source(&temp)).Or(
-			Filter().
+		_, err := kyte.Filter(kyte.Source(&temp)).Or(
+			kyte.Filter().
 				Equal(nil, name),
 		).Build()
 
@@ -756,8 +703,8 @@ func TestFilter_NOR(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().NOR(
-			Filter().
+		q, err := kyte.Filter().NOR(
+			kyte.Filter().
 				Equal("name", "kyte").
 				Equal("surname", "joe"),
 		).Build()
@@ -793,14 +740,14 @@ func TestFilter_NOR(t *testing.T) {
 		name := "kyte"
 		surname := "joe"
 		age := 10
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			NOR(
-				Filter().
+				kyte.Filter().
 					Equal(&temp.Name, name).
 					Equal(&temp.Surname, surname),
 			).
 			NOR(
-				Filter().
+				kyte.Filter().
 					GreaterThan(&temp.Age, age),
 			).
 			Build()
@@ -841,8 +788,8 @@ func TestFilter_NOR(t *testing.T) {
 		}
 		var temp Temp
 		name := "kyte"
-		_, err := Filter(Source(&temp)).NOR(
-			Filter().
+		_, err := kyte.Filter(kyte.Source(&temp)).NOR(
+			kyte.Filter().
 				Equal(nil, name),
 		).Build()
 
@@ -856,7 +803,7 @@ func TestFilter_Regex(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().Regex("name", regexp.MustCompile("kyte")).Build()
+		q, err := kyte.Filter().Regex("name", regexp.MustCompile("kyte")).Build()
 		if err != nil {
 			t.Errorf("Filter.Regex should not return error: %v", err)
 		}
@@ -881,7 +828,7 @@ func TestFilter_Regex(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Regex(&temp.Name, regexp.MustCompile("kyte")).
 			Regex(&temp.Age, regexp.MustCompile("10")).
 			Build()
@@ -914,7 +861,7 @@ func TestFilter_Regex(t *testing.T) {
 			Name string `bson:"name"`
 		}
 		var temp Temp
-		_, err := Filter(Source(&temp)).Regex(nil, regexp.MustCompile("kyte")).Build()
+		_, err := kyte.Filter(kyte.Source(&temp)).Regex(nil, regexp.MustCompile("kyte")).Build()
 
 		if err == nil {
 			t.Error("Filter.Regex should return error")
@@ -926,10 +873,10 @@ func TestFilter_Regex(t *testing.T) {
 			Name string `bson:"name"`
 		}
 		var temp Temp
-		_, err := Filter(Source(&temp)).Regex(&temp.Name, nil).Build()
+		_, err := kyte.Filter(kyte.Source(&temp)).Regex(&temp.Name, nil).Build()
 
-		if err != ErrRegexCannotBeNil {
-			t.Errorf("Filter.Regex should return error %v, got %v", ErrRegexCannotBeNil, err)
+		if err != kyte.ErrRegexCannotBeNil {
+			t.Errorf("Filter.Regex should return error %v, got %v", kyte.ErrRegexCannotBeNil, err)
 		}
 	})
 
@@ -938,7 +885,7 @@ func TestFilter_Regex(t *testing.T) {
 			Name string `bson:"name"`
 		}
 		var temp Temp
-		q, err := Filter(Source(&temp)).Regex(&temp.Name, regexp.MustCompile("kyte"), "i").Build()
+		q, err := kyte.Filter(kyte.Source(&temp)).Regex(&temp.Name, regexp.MustCompile("kyte"), "i").Build()
 		if err != nil {
 			t.Errorf("Filter.Regex should not return error: %v", err)
 		}
@@ -965,7 +912,7 @@ func TestFilter_Regex(t *testing.T) {
 			Name string `bson:"name"`
 		}
 		var temp Temp
-		q, err := Filter(Source(&temp)).Regex(&temp.Name, regexp.MustCompile("kyte"), "s", "i").Build()
+		q, err := kyte.Filter(kyte.Source(&temp)).Regex(&temp.Name, regexp.MustCompile("kyte"), "s", "i").Build()
 		if err != nil {
 			t.Errorf("Filter.Regex should not return error: %v", err)
 		}
@@ -993,7 +940,7 @@ func TestFilter_Exists(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().Exists("name", true).Build()
+		q, err := kyte.Filter().Exists("name", true).Build()
 		if err != nil {
 			t.Errorf("Filter.Exists should not return error: %v", err)
 		}
@@ -1020,7 +967,7 @@ func TestFilter_Exists(t *testing.T) {
 		var temp Temp
 		isNameExists := true
 		isAgeExists := false
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Exists(&temp.Name, isNameExists).
 			Exists(&temp.Age, isAgeExists).
 			Build()
@@ -1053,7 +1000,7 @@ func TestFilter_Type(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without source", func(t *testing.T) {
-		q, err := Filter().Type("name", bson.TypeString).Build()
+		q, err := kyte.Filter().Type("name", bson.TypeString).Build()
 		if err != nil {
 			t.Errorf("Filter.Type should not return error: %v", err)
 		}
@@ -1078,7 +1025,7 @@ func TestFilter_Type(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Type(&temp.Name, bson.TypeString).
 			Type(&temp.Age, bson.TypeInt32).
 			Build()
@@ -1113,7 +1060,7 @@ func TestFilter_Type(t *testing.T) {
 		var temp Temp
 		type1 := bson.TypeString
 		type2 := bson.TypeInt32
-		q, err := Filter(Source(&temp)).Type(&temp.Name, type1, type2).Build()
+		q, err := kyte.Filter(kyte.Source(&temp)).Type(&temp.Name, type1, type2).Build()
 		if err != nil {
 			t.Errorf("Filter.Type should not return error: %v", err)
 		}
@@ -1144,10 +1091,10 @@ func TestFilter_Type(t *testing.T) {
 			}
 
 			var temp Temp
-			_, err := Filter(Source(&temp)).Type(&temp.Name).Build()
+			_, err := kyte.Filter(kyte.Source(&temp)).Type(&temp.Name).Build()
 
-			if err != ErrInvalidBsonType {
-				t.Errorf("Filter.Type should return error %v, got %v", ErrInvalidBsonType, err)
+			if err != kyte.ErrInvalidBsonType {
+				t.Errorf("Filter.Type should return error %v, got %v", kyte.ErrInvalidBsonType, err)
 			}
 		})
 
@@ -1157,10 +1104,10 @@ func TestFilter_Type(t *testing.T) {
 			}
 
 			var temp Temp
-			_, err := Filter(Source(&temp)).Type(&temp.Name, 100).Build()
+			_, err := kyte.Filter(kyte.Source(&temp)).Type(&temp.Name, 100).Build()
 
-			if err != ErrInvalidBsonType {
-				t.Errorf("Filter.Type should return error %v, got %v", ErrInvalidBsonType, err)
+			if err != kyte.ErrInvalidBsonType {
+				t.Errorf("Filter.Type should return error %v, got %v", kyte.ErrInvalidBsonType, err)
 			}
 		})
 	})
@@ -1172,7 +1119,7 @@ func TestFilter_Mod(t *testing.T) {
 	t.Run("without source", func(t *testing.T) {
 		divisor := 10
 		remainder := 1
-		q, err := Filter().Mod("name", divisor, remainder).Build()
+		q, err := kyte.Filter().Mod("name", divisor, remainder).Build()
 		if err != nil {
 			t.Errorf("Filter.Mod should not return error: %v", err)
 		}
@@ -1205,7 +1152,7 @@ func TestFilter_Mod(t *testing.T) {
 		divisor1 := 20
 		remainder := 1
 		remainder1 := 2
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Mod(&temp.Name, divisor, remainder).
 			Mod(&temp.Age, divisor1, remainder1).
 			Build()
@@ -1247,7 +1194,7 @@ func TestFilter_Where(t *testing.T) {
 
 	t.Run("without source", func(t *testing.T) {
 		fn := "this.name == 'kyte'"
-		q, err := Filter().Where(fn).Build()
+		q, err := kyte.Filter().Where(fn).Build()
 		if err != nil {
 			t.Errorf("Filter.Where should not return error: %v", err)
 		}
@@ -1274,7 +1221,7 @@ func TestFilter_Where(t *testing.T) {
 		var temp Temp
 		fn := "this.name == 'kyte'"
 		fn1 := "this.age == 10"
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Where(fn).
 			Where(fn1).
 			Build()
@@ -1302,7 +1249,7 @@ func TestFilter_All(t *testing.T) {
 
 	t.Run("without source", func(t *testing.T) {
 		arr := []string{"kyte", "joe"}
-		q, err := Filter().All("name", arr).Build()
+		q, err := kyte.Filter().All("name", arr).Build()
 		if err != nil {
 			t.Errorf("Filter.All should not return error: %v", err)
 		}
@@ -1329,7 +1276,7 @@ func TestFilter_All(t *testing.T) {
 		var temp Temp
 		arrName := []string{"kyte", "joe"}
 		arrAge := []int{10, 20}
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			All(&temp.Name, arrName).
 			All(&temp.Age, arrAge).
 			Build()
@@ -1364,10 +1311,10 @@ func TestFilter_All(t *testing.T) {
 		}
 
 		var temp Temp
-		_, err := Filter(Source(&temp)).All(&temp.Name, "arr").Build()
+		_, err := kyte.Filter(kyte.Source(&temp)).All(&temp.Name, "arr").Build()
 
-		if err != ErrValueMustBeSlice {
-			t.Errorf("Filter.All should return error %v, got %v", ErrValueMustBeSlice, err)
+		if err != kyte.ErrValueMustBeSlice {
+			t.Errorf("Filter.All should return error %v, got %v", kyte.ErrValueMustBeSlice, err)
 		}
 	})
 }
@@ -1377,7 +1324,7 @@ func TestFilter_Size(t *testing.T) {
 
 	t.Run("without source", func(t *testing.T) {
 		size := 10
-		q, err := Filter().Size("name", size).Build()
+		q, err := kyte.Filter().Size("name", size).Build()
 		if err != nil {
 			t.Errorf("Filter.Size should not return error: %v", err)
 		}
@@ -1404,7 +1351,7 @@ func TestFilter_Size(t *testing.T) {
 		var temp Temp
 		sizeName := 10
 		sizeAge := 20
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Size(&temp.Name, sizeName).
 			Size(&temp.Age, sizeAge).
 			Build()
@@ -1447,7 +1394,7 @@ func TestFilter_JSONSchema(t *testing.T) {
 			},
 		}
 
-		q, err := Filter().JSONSchema(schema).Build()
+		q, err := kyte.Filter().JSONSchema(schema).Build()
 		if err != nil {
 			t.Errorf("Filter.JSONSchema should not return error: %v", err)
 		}
@@ -1489,7 +1436,7 @@ func TestFilter_JSONSchema(t *testing.T) {
 			},
 		}
 
-		q, err := Filter(Source(&temp)).JSONSchema(schema1).JSONSchema(schema2).Build()
+		q, err := kyte.Filter(kyte.Source(&temp)).JSONSchema(schema1).JSONSchema(schema2).Build()
 		if err != nil {
 			t.Errorf("Filter.JSONSchema should not return error: %v", err)
 		}
@@ -1521,7 +1468,7 @@ func TestFilter_Raw(t *testing.T) {
 	t.Run("without source", func(t *testing.T) {
 		raw := bson.D{{Key: "name", Value: "kyte"}}
 
-		q, err := Filter().Raw(raw).Build()
+		q, err := kyte.Filter().Raw(raw).Build()
 		if err != nil {
 			t.Errorf("Filter.Raw should not return error: %v", err)
 		}
@@ -1544,7 +1491,7 @@ func TestFilter_Raw(t *testing.T) {
 		raw1 := bson.E{Key: "name", Value: "kyte"}
 		raw2 := bson.E{Key: "age", Value: 10}
 
-		q, err := Filter(Source(&temp)).Raw(bson.D{raw1}).Raw(bson.D{raw2}).Build()
+		q, err := kyte.Filter(kyte.Source(&temp)).Raw(bson.D{raw1}).Raw(bson.D{raw2}).Build()
 		if err != nil {
 			t.Errorf("Filter.Raw should not return error: %v", err)
 		}
@@ -1599,7 +1546,7 @@ func TestFilter_Build(t *testing.T) {
 
 	t.Run("without source", func(t *testing.T) {
 
-		q, err := Filter().
+		q, err := kyte.Filter().
 			Equal("name", "kyte").
 			NotEqual("surname", "joe").
 			GreaterThan("age", 10).
@@ -1610,17 +1557,17 @@ func TestFilter_Build(t *testing.T) {
 			Type("name", bson.TypeString, bson.TypeInt32).
 			Mod("age", 10, 1).
 			Or(
-				Filter().
+				kyte.Filter().
 					Equal("name", "kyte").
 					Equal("surname", "joe"),
 			).
 			And(
-				Filter().
+				kyte.Filter().
 					Equal("name", "kyte").
 					Equal("surname", "joe"),
 			).
 			NOR(
-				Filter().
+				kyte.Filter().
 					Equal("name", "kyte").
 					Equal("surname", "joe"),
 			).
@@ -1669,7 +1616,7 @@ func TestFilter_Build(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			Equal(&temp.Name, "kyte").
 			NotEqual(&temp.Surname, "joe").
 			GreaterThan(&temp.Age, 10).
@@ -1680,17 +1627,17 @@ func TestFilter_Build(t *testing.T) {
 			Type(&temp.Name, bson.TypeString, bson.TypeInt32).
 			Mod(&temp.Age, 10, 1).
 			Or(
-				Filter().
+				kyte.Filter().
 					Equal(&temp.Name, "kyte").
 					Equal(&temp.Surname, "joe"),
 			).
 			And(
-				Filter().
+				kyte.Filter().
 					Equal(&temp.Name, "kyte").
 					Equal(&temp.Surname, "joe"),
 			).
 			NOR(
-				Filter().
+				kyte.Filter().
 					Equal(&temp.Name, "kyte").
 					Equal(&temp.Surname, "joe"),
 			).
@@ -1741,7 +1688,7 @@ func TestFilter_Build(t *testing.T) {
 
 		var temp Temp
 		var temp1 Temp1
-		_, err := Filter(Source(&temp), ValidateField(false)).Equal(&temp1.Surname, "kyte").Build()
+		_, err := kyte.Filter(kyte.Source(&temp), kyte.ValidateField(false)).Equal(&temp1.Surname, "kyte").Build()
 
 		if err == nil {
 			t.Error("Filter.Build should return error")
@@ -1755,7 +1702,7 @@ func TestFilter_Build(t *testing.T) {
 
 		var temp Temp
 		str := "kyte"
-		q, err := Filter(Source(&temp)).Equal(&temp.Name, &str).Build()
+		q, err := kyte.Filter(kyte.Source(&temp)).Equal(&temp.Name, &str).Build()
 
 		if err != nil {
 			t.Errorf("Filter.Build should not return error: %v", err)
@@ -1778,7 +1725,7 @@ func TestFilter_Build(t *testing.T) {
 		}
 
 		var temp Temp
-		q, err := Filter(Source(&temp)).
+		q, err := kyte.Filter(kyte.Source(&temp)).
 			In(&temp.Name, "kyte").
 			NotIn(&temp.Surname, "joe").
 			Type(&temp.Age, bson.TypeString).
@@ -1804,4 +1751,13 @@ func TestFilter_Build(t *testing.T) {
 			t.Errorf("Filter.Build should return value %v, got %v", bson.TypeString, q[2].Value)
 		}
 	})
+}
+
+func contains[T comparable](slice []T, item T) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
