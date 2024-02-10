@@ -246,7 +246,7 @@ func (k *kyte) isFieldValid(field any) error {
 	}
 
 	if !ok && !contains(k.fieldNames, fieldName) {
-		return errors.Join(ErrNotValidFieldForQuery, errors.New(fmt.Sprintf("field: %s You can ignore this error by setting checkField to false", fieldName)))
+		return errors.Join(ErrNotValidFieldForQuery, fmt.Errorf("field: %s You can ignore this error by setting checkField to false", fieldName))
 	}
 
 	return nil
