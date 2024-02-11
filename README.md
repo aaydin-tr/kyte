@@ -20,7 +20,6 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#advanced-usage">Advanced Usage</a></li>
     <li><a href="#supported-operators">Supported Operators</a></li>
-    <li><a href="#contributing">Contributing</a></li>
   </ol>
 </details>
 <br>
