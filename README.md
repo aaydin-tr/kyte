@@ -63,10 +63,10 @@ The above code will generate the following MongoDB query:
 
 ### Advanced Usage
 
-Kyte allows you to build queries using a struct schema. This is useful when you want to prevent mistakes in your queries. For example, if you have a struct that represents the schema of your MongoDB collection, you can use it to build queries. Kyte will ensure that the fields you use in your queries are valid and exist in the schema. For this purpose Kyte provides `Source` and `ValidateField` functions. 
+Kyte allows you to build queries using a struct schema. This is useful when you want to prevent mistakes in your queries. For example, if you have a struct that represents the schema of your MongoDB collection, you can use it to build queries. Kyte will ensure that the fields you use in your queries are valid and exist in the schema. For this purpose Kyte provides two option functions: `Source` and `ValidateField`.
 
 `Source` function is used to specify the struct schema that you want to use to build queries. 
-`ValidateField` function is used to validate the fields that you use in your queries. ( Default behavior is to validate fields )
+`ValidateField` function is used to validate the fields that you use in your queries. ( By default, it is enabled. )
 
 > Note: You can also use `ValidateField(false)` to disable field validation.
 
