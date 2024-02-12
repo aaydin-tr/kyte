@@ -202,6 +202,17 @@ When you use `kyte.Source` function, you can pass a pointer of the struct field 
   Raw(bson.D{{"name", "John"}})
   // { "name": "John" }
   ```
+- ToJSON (Converts the filter to a JSON string can be used for debugging)
+  ```go
+  jsonQuery, _ := kyte.Filter().
+      Equal("name", "John").
+      GreaterThan("age", 20).
+      ToJSON()
+
+  fmt.Println(jsonQuery)
+  // { "name": {"$eq": "John"}, "age": {"$gt": 20} }
+  ```
+
 
 
 
