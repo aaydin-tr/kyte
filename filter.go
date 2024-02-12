@@ -54,6 +54,8 @@ type filter struct {
 	kyte       *kyte
 	query      bson.D
 	operations []operation
+
+	isBuild bool
 }
 
 /*
@@ -417,6 +419,15 @@ func (f *filter) Raw(query bson.D) *filter {
 Build returns the query as bson.M. If there is an error, it will return nil and the first error.
 */
 func (f *filter) Build() (bson.D, error) {
+	if f.kyte.hasErrors() {
+		return nil, f.kyte.err
+	}
+
+	if f.isBuild {
+		return f.query, nil
+	}
+	f.isBuild = true
+
 	for _, opt := range f.operations {
 		err := f.kyte.validate(&opt)
 		if err != nil {
@@ -460,7 +471,7 @@ func (f *filter) Build() (bson.D, error) {
 	}
 
 	if f.kyte.hasErrors() {
-		return nil, f.kyte.errs[0]
+		return nil, f.kyte.err
 	}
 
 	return f.query, nil
@@ -476,4 +487,18 @@ func (f *filter) set(operator string, field any, value any, isFieldRequired bool
 	})
 
 	return f
+}
+
+func (f *filter) ToJSON() (string, error) {
+	query, err := f.Build()
+	if err != nil {
+		return "", err
+	}
+
+	b, err := bson.MarshalExtJSON(query, false, false)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }

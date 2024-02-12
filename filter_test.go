@@ -1753,6 +1753,166 @@ func TestFilter_Build(t *testing.T) {
 	})
 }
 
+func TestFilter_ToJSON(t *testing.T) {
+	t.Parallel()
+	targetQuery := bson.D{
+		{Key: "$or", Value: bson.A{
+			bson.M{"name": bson.M{"$eq": "kyte"}},
+			bson.M{"surname": bson.M{"$eq": "joe"}},
+		}},
+		{Key: "$and", Value: bson.A{
+			bson.M{"name": bson.M{"$eq": "kyte"}},
+			bson.M{"surname": bson.M{"$eq": "joe"}},
+		}},
+		{Key: "$nor", Value: bson.A{
+			bson.M{"name": bson.M{"$eq": "kyte"}},
+			bson.M{"surname": bson.M{"$eq": "joe"}},
+		}},
+		{Key: "name", Value: bson.M{"$eq": "kyte"}},
+		{Key: "surname", Value: bson.M{"$ne": "joe"}},
+		{Key: "age", Value: bson.M{"$gt": 10}},
+		{Key: "age", Value: bson.M{"$lt": 20}},
+		{Key: "tags", Value: bson.M{"$in": bson.A{"tag1", "tag2"}}},
+		{Key: "tags", Value: bson.M{"$nin": bson.A{"tag3", "tag4"}}},
+		{Key: "name", Value: bson.M{"$exists": true}},
+		{Key: "name", Value: bson.M{"$type": bson.A{bson.TypeString, bson.TypeInt32}}},
+		{Key: "age", Value: bson.M{"$mod": bson.A{10, 1}}},
+		{Key: "$where", Value: "this.name == 'kyte'"},
+		{Key: "name", Value: bson.M{"$all": bson.A{"kyte", "joe"}}},
+		{Key: "name", Value: bson.M{"$size": 10}},
+		{Key: "$jsonSchema", Value: bson.M{
+			"properties": bson.M{
+				"name": bson.M{
+					"type": "string",
+				},
+			},
+		}},
+	}
+
+	t.Run("without source", func(t *testing.T) {
+
+		q, err := kyte.Filter().
+			Equal("name", "kyte").
+			NotEqual("surname", "joe").
+			GreaterThan("age", 10).
+			LessThan("age", 20).
+			In("tags", []string{"tag1", "tag2"}).
+			NotIn("tags", []string{"tag3", "tag4"}).
+			Exists("name", true).
+			Type("name", bson.TypeString, bson.TypeInt32).
+			Mod("age", 10, 1).
+			Or(
+				kyte.Filter().
+					Equal("name", "kyte").
+					Equal("surname", "joe"),
+			).
+			And(
+				kyte.Filter().
+					Equal("name", "kyte").
+					Equal("surname", "joe"),
+			).
+			NOR(
+				kyte.Filter().
+					Equal("name", "kyte").
+					Equal("surname", "joe"),
+			).
+			Where("this.name == 'kyte'").
+			All("name", []string{"kyte", "joe"}).
+			Size("name", 10).
+			JSONSchema(bson.M{
+				"properties": bson.M{
+					"name": bson.M{
+						"type": "string",
+					},
+				},
+			}).
+			ToJSON()
+
+		if err != nil {
+			t.Errorf("Filter.ToJSON should not return error: %v", err)
+		}
+
+		if q == "" {
+			t.Error("Filter.ToJSON should not return empty string")
+		}
+
+		targetQueryByte, err := bson.MarshalExtJSON(targetQuery, false, false)
+		if err != nil {
+			t.Errorf("Filter.ToJSON should not return error: %v", err)
+		}
+
+		if string(q) != string(targetQueryByte) {
+			t.Errorf("Filter.ToJSON should return value %v, got %v", string(targetQueryByte), string(q))
+		}
+	})
+
+	t.Run("with source", func(t *testing.T) {
+
+		type Temp struct {
+			Name    string   `bson:"name"`
+			Age     int      `bson:"age"`
+			Tags    []string `bson:"tags"`
+			Surname string   `bson:"surname"`
+		}
+
+		var temp Temp
+		q, err := kyte.Filter(kyte.Source(&temp)).
+			Equal(&temp.Name, "kyte").
+			NotEqual(&temp.Surname, "joe").
+			GreaterThan(&temp.Age, 10).
+			LessThan(&temp.Age, 20).
+			In(&temp.Tags, []string{"tag1", "tag2"}).
+			NotIn(&temp.Tags, []string{"tag3", "tag4"}).
+			Exists(&temp.Name, true).
+			Type(&temp.Name, bson.TypeString, bson.TypeInt32).
+			Mod(&temp.Age, 10, 1).
+			Or(
+				kyte.Filter().
+					Equal(&temp.Name, "kyte").
+					Equal(&temp.Surname, "joe"),
+			).
+			And(
+				kyte.Filter().
+					Equal(&temp.Name, "kyte").
+					Equal(&temp.Surname, "joe"),
+			).
+			NOR(
+				kyte.Filter().
+					Equal(&temp.Name, "kyte").
+					Equal(&temp.Surname, "joe"),
+			).
+			Where("this.name == 'kyte'").
+			All(&temp.Name, []string{"kyte", "joe"}).
+			Size(&temp.Name, 10).
+			JSONSchema(bson.M{
+				"properties": bson.M{
+					"name": bson.M{
+						"type": "string",
+					},
+				},
+			}).
+			ToJSON()
+
+		if err != nil {
+			t.Errorf("Filter.ToJSON should not return error: %v", err)
+		}
+
+		if q == "" {
+			t.Error("Filter.ToJSON should not return empty string")
+		}
+
+		targetQueryByte, err := bson.MarshalExtJSON(targetQuery, false, false)
+		if err != nil {
+			t.Errorf("Filter.ToJSON should not return error: %v", err)
+		}
+
+		if string(q) != string(targetQueryByte) {
+			t.Errorf("Filter.ToJSON should return value %v, got %v", string(targetQueryByte), string(q))
+		}
+
+	})
+}
+
 func contains[T comparable](slice []T, item T) bool {
 	for _, s := range slice {
 		if s == item {
