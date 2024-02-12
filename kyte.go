@@ -64,7 +64,7 @@ type kyte struct {
 	source     any
 	fields     map[any]string
 	fieldNames []string
-	errs       []error
+	err        error
 	checkField bool
 }
 
@@ -84,7 +84,7 @@ func (k *kyte) setSourceAndPrepareFields(source any) {
 	k.fieldNames = []string{}
 
 	if reflect.ValueOf(source).Kind() != reflect.Ptr {
-		k.errs = append(k.errs, ErrNotPtrSource)
+		k.err = ErrNotPtrSource
 		return
 	}
 
@@ -179,12 +179,10 @@ func (k *kyte) setSourceAndPrepareFields(source any) {
 	}
 }
 
-func (k *kyte) Errors() []error {
-	return k.errs
-}
-
 func (k *kyte) setError(err error) {
-	k.errs = append(k.errs, err)
+	if k.err == nil {
+		k.err = err
+	}
 }
 
 type operation struct {
@@ -197,7 +195,7 @@ type operation struct {
 
 func (k *kyte) validate(opt *operation) error {
 	if k.hasErrors() {
-		return k.errs[0]
+		return k.err
 	}
 
 	if opt.isFieldRequired && opt.field == nil {
@@ -230,7 +228,7 @@ func (k *kyte) validate(opt *operation) error {
 
 func (k *kyte) isFieldValid(field any) error {
 	if k.hasErrors() {
-		return k.errs[0]
+		return k.err
 	}
 
 	fieldType := reflect.TypeOf(field)
@@ -253,7 +251,7 @@ func (k *kyte) isFieldValid(field any) error {
 }
 
 func (k *kyte) hasErrors() bool {
-	return len(k.errs) > 0
+	return k.err != nil
 }
 
 func (k *kyte) getFieldName(field any) (string, error) {

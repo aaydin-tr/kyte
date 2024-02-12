@@ -46,17 +46,13 @@ type TestWithNestedStructWithPointer struct {
 	Todo     *TestTodo `bson:"todo"`
 }
 
-func testKyteFieldAndSource(t *testing.T, kyte *kyte, fields map[any]string, errCount int, fieldCount int) {
+func testKyteFieldAndSource(t *testing.T, kyte *kyte, fields map[any]string, fieldCount int) {
 	if len(kyte.fields) != fieldCount {
 		t.Errorf("kyte.fields should be %v but got %v", fieldCount, len(kyte.fields))
 	}
 
 	if len(kyte.fieldNames) != fieldCount {
 		t.Errorf("kyte.fieldNames should be %v but got %v", fieldCount, len(kyte.fieldNames))
-	}
-
-	if len(kyte.errs) != errCount {
-		t.Errorf("kyte.errs should be empty slice but got %v", kyte.errs)
 	}
 
 	for ptr, field := range fields {
@@ -74,7 +70,7 @@ func TestNewKyte(t *testing.T) {
 		if kyte.source != nil {
 			t.Errorf("kyte.source should be nil but got %v", kyte.source)
 		}
-		testKyteFieldAndSource(t, kyte, nil, 0, 0)
+		testKyteFieldAndSource(t, kyte, nil, 0)
 	})
 
 	t.Run("with source not nil should return kyte with fields", func(t *testing.T) {
@@ -90,7 +86,7 @@ func TestNewKyte(t *testing.T) {
 			if kyte.source == nil {
 				t.Errorf("kyte.source should not be nil")
 			}
-			testKyteFieldAndSource(t, kyte, fields, 0, 7)
+			testKyteFieldAndSource(t, kyte, fields, 7)
 		})
 
 		t.Run("non zero value", func(t *testing.T) {
@@ -110,7 +106,7 @@ func TestNewKyte(t *testing.T) {
 			if kyte.source == nil {
 				t.Errorf("kyte.source should not be nil")
 			}
-			testKyteFieldAndSource(t, kyte, fields, 0, 7)
+			testKyteFieldAndSource(t, kyte, fields, 7)
 		})
 	})
 
@@ -128,7 +124,7 @@ func TestNewKyte(t *testing.T) {
 				t.Errorf("kyte.source should not be nil")
 			}
 
-			testKyteFieldAndSource(t, kyte, fields, 0, 7)
+			testKyteFieldAndSource(t, kyte, fields, 7)
 		})
 		t.Run("non zero value", func(t *testing.T) {
 
@@ -144,7 +140,7 @@ func TestNewKyte(t *testing.T) {
 				t.Errorf("kyte.source should not be nil")
 			}
 
-			testKyteFieldAndSource(t, kyte, fields, 0, 7)
+			testKyteFieldAndSource(t, kyte, fields, 7)
 		})
 	})
 
@@ -161,7 +157,7 @@ func TestNewKyte(t *testing.T) {
 			if kyte.source == nil {
 				t.Errorf("kyte.source should not be nil")
 			}
-			testKyteFieldAndSource(t, kyte, fields, 0, 7)
+			testKyteFieldAndSource(t, kyte, fields, 7)
 		})
 		t.Run("non zero value", func(t *testing.T) {
 			source := &TestStructWithPointerArray{Todos: []*TestTodo{}}
@@ -175,7 +171,7 @@ func TestNewKyte(t *testing.T) {
 			if kyte.source == nil {
 				t.Errorf("kyte.source should not be nil")
 			}
-			testKyteFieldAndSource(t, kyte, fields, 0, 7)
+			testKyteFieldAndSource(t, kyte, fields, 7)
 		})
 	})
 
@@ -197,7 +193,7 @@ func TestNewKyte(t *testing.T) {
 			if kyte.source == nil {
 				t.Errorf("kyte.source should not be nil")
 			}
-			testKyteFieldAndSource(t, kyte, fields, 0, 7)
+			testKyteFieldAndSource(t, kyte, fields, 7)
 		})
 		t.Run("non zero value", func(t *testing.T) {
 			source := &TestWithNestedStruct{Todo: TestTodo{}}
@@ -215,7 +211,7 @@ func TestNewKyte(t *testing.T) {
 			if kyte.source == nil {
 				t.Errorf("kyte.source should not be nil")
 			}
-			testKyteFieldAndSource(t, kyte, fields, 0, 7)
+			testKyteFieldAndSource(t, kyte, fields, 7)
 		})
 	})
 
@@ -232,7 +228,7 @@ func TestNewKyte(t *testing.T) {
 		}
 
 		kyte := newKyte(source, true)
-		testKyteFieldAndSource(t, kyte, fields, 0, 7)
+		testKyteFieldAndSource(t, kyte, fields, 7)
 	})
 
 	t.Run("not pointer source should return kyte with error", func(t *testing.T) {
@@ -242,8 +238,8 @@ func TestNewKyte(t *testing.T) {
 			t.Errorf("kyte should have errors")
 		}
 
-		if kyte.errs[0] != ErrNotPtrSource {
-			t.Errorf("kyte should have error %v but got %v", ErrNotPtrSource, kyte.errs[0])
+		if kyte.err != ErrNotPtrSource {
+			t.Errorf("kyte should have error %v but got %v", ErrNotPtrSource, kyte.err)
 		}
 	})
 
@@ -259,7 +255,7 @@ func TestNewKyte(t *testing.T) {
 		}
 
 		kyte := newKyte(source, true)
-		testKyteFieldAndSource(t, kyte, fields, 0, 1)
+		testKyteFieldAndSource(t, kyte, fields, 1)
 	})
 
 	t.Run("array of pointer of struct non zero value ", func(t *testing.T) {
@@ -280,7 +276,7 @@ func TestNewKyte(t *testing.T) {
 		}
 
 		kyte := newKyte(source, true)
-		testKyteFieldAndSource(t, kyte, fields, 0, 5)
+		testKyteFieldAndSource(t, kyte, fields, 5)
 	})
 
 	t.Run("array of pointer of struct zero value ", func(t *testing.T) {
@@ -295,7 +291,7 @@ func TestNewKyte(t *testing.T) {
 		}
 
 		kyte := newKyte(source, true)
-		testKyteFieldAndSource(t, kyte, fields, 0, 5)
+		testKyteFieldAndSource(t, kyte, fields, 5)
 	})
 
 	t.Run("pointer array of pointer of struct non zero value ", func(t *testing.T) {
@@ -317,7 +313,7 @@ func TestNewKyte(t *testing.T) {
 		}
 
 		kyte := newKyte(source, true)
-		testKyteFieldAndSource(t, kyte, fields, 0, 5)
+		testKyteFieldAndSource(t, kyte, fields, 5)
 	})
 
 	t.Run("pointer array of pointer of struct zero value ", func(t *testing.T) {
@@ -333,7 +329,7 @@ func TestNewKyte(t *testing.T) {
 		}
 
 		kyte := newKyte(source, true)
-		testKyteFieldAndSource(t, kyte, fields, 0, 5)
+		testKyteFieldAndSource(t, kyte, fields, 5)
 	})
 
 	t.Run("ignore field if does not have bson tag", func(t *testing.T) {
@@ -356,7 +352,7 @@ func TestNewKyte(t *testing.T) {
 		}
 
 		kyte := newKyte(source, true)
-		testKyteFieldAndSource(t, kyte, fields, 0, 5)
+		testKyteFieldAndSource(t, kyte, fields, 5)
 	})
 }
 
@@ -364,15 +360,15 @@ func TestKyteErros(t *testing.T) {
 	t.Parallel()
 	t.Run("not nil errors", func(t *testing.T) {
 		kyte := newKyte("str", true)
-		if kyte.Errors() == nil {
-			t.Errorf("kyte.Errors() should not be nil but got %v", kyte.Errors())
+		if kyte.err == nil {
+			t.Errorf("kyte.Errors() should not be nil but got %v", kyte.err)
 		}
 	})
 
 	t.Run("nil errors", func(t *testing.T) {
 		kyte := newKyte(nil, true)
-		if kyte.Errors() != nil {
-			t.Errorf("kyte.Errors() should be nil but got %v", kyte.Errors())
+		if kyte.err != nil {
+			t.Errorf("kyte.Errors() should be nil but got %v", kyte.err)
 		}
 	})
 }
@@ -398,8 +394,8 @@ func TestKyteSetError(t *testing.T) {
 	t.Run("with error", func(t *testing.T) {
 		kyte := newKyte(nil, true)
 		kyte.setError(ErrNotPtrSource)
-		if kyte.Errors() == nil {
-			t.Errorf("kyte.Errors() should not be nil but got %v", kyte.Errors())
+		if kyte.err == nil {
+			t.Errorf("kyte.Errors() should not be nil but got %v", kyte.err)
 		}
 	})
 }
