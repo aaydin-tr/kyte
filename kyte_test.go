@@ -425,18 +425,6 @@ func TestKyteValidate(t *testing.T) {
 		}
 	})
 
-	t.Run("value is required but nil", func(t *testing.T) {
-		kyte := newKyte(nil, true)
-		err := kyte.validate(&operation{
-			field:           "field",
-			value:           nil,
-			isValueRequired: true,
-		})
-		if err != ErrNilValue {
-			t.Errorf("kyte.validate() should return error %v but got %v", ErrNilValue, err)
-		}
-	})
-
 	t.Run("field is required but not string or pointer", func(t *testing.T) {
 		kyte := newKyte(nil, true)
 		err := kyte.validate(&operation{

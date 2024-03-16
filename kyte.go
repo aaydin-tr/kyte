@@ -20,7 +20,6 @@ var (
 
 	ErrNotValidFieldForQuery = errors.New("this field is not in the source struct")
 
-	ErrNilValue          = errors.New("value is nil")
 	ErrNilField          = errors.New("field is nil")
 	ErrFieldMustBeString = errors.New("field must be string")
 
@@ -196,7 +195,6 @@ type operation struct {
 	field           any
 	value           any
 	isFieldRequired bool
-	isValueRequired bool
 }
 
 func (k *kyte) validate(opt *operation) error {
@@ -206,10 +204,6 @@ func (k *kyte) validate(opt *operation) error {
 
 	if opt.isFieldRequired && opt.field == nil {
 		return ErrNilField
-	}
-
-	if opt.isValueRequired && opt.value == nil {
-		return ErrNilValue
 	}
 
 	if opt.isFieldRequired {
