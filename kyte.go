@@ -12,6 +12,7 @@ var builtinTags = []string{"omitempty", "minsize", "truncate", "inline"}
 var (
 	ErrNilSource    = errors.New("source is nil")
 	ErrNotPtrSource = errors.New("source is not a pointer")
+	ErrNotStruct    = errors.New("source is not a pointer of a struct")
 
 	ErrEmptyField             = errors.New("field is empty use string or pointer of an source struct field")
 	ErrNilPointerField        = errors.New("field is nil pointer")
@@ -85,6 +86,11 @@ func (k *kyte) setSourceAndPrepareFields(source any) {
 
 	if reflect.ValueOf(source).Kind() != reflect.Ptr {
 		k.err = ErrNotPtrSource
+		return
+	}
+
+	if reflect.ValueOf(source).Kind() == reflect.Ptr && reflect.ValueOf(source).Elem().Kind() != reflect.Struct {
+		k.err = ErrNotStruct
 		return
 	}
 
