@@ -451,13 +451,12 @@ func (f *filter) Build() (bson.D, error) {
 			break
 		}
 
-		valueType := reflect.TypeOf(opt.value)
-		if valueType.Kind() == reflect.Ptr {
+		if opt.value != nil && reflect.TypeOf(opt.value).Kind() == reflect.Ptr {
 			opt.value = reflect.ValueOf(opt.value).Elem().Interface()
 		}
 
 		if opt.operator == in || opt.operator == nin || opt.operator == _type {
-			if valueType.Kind() != reflect.Slice {
+			if opt.value != nil && reflect.TypeOf(opt.value).Kind() != reflect.Slice {
 				opt.value = bson.A{opt.value}
 			}
 		}
