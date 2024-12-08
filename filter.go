@@ -426,7 +426,6 @@ func (f *filter) Build() (bson.D, error) {
 	if f.isBuild {
 		return f.query, nil
 	}
-	f.isBuild = true
 
 	for _, opt := range f.operations {
 		err := f.kyte.validate(&opt)
@@ -473,6 +472,7 @@ func (f *filter) Build() (bson.D, error) {
 		return nil, f.kyte.err
 	}
 
+	f.isBuild = true
 	return f.query, nil
 }
 
