@@ -296,6 +296,10 @@ func getSubStructFields(s reflect.Value, parentPrefix string, fields map[any]str
 		parentPrefix += "."
 	}
 
+	if s.Kind() != reflect.Struct {
+		return
+	}
+
 	for i := 0; i < s.NumField(); i++ {
 		field := s.Type().Field(i)
 		fieldValue := s.Field(i)
