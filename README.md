@@ -88,6 +88,42 @@ When you use `kyte.Source` function, you can pass a pointer of the struct field 
 
 > Note: You can also use `string` value as a field name and Kyte still will validate the field. *But using a pointer to the struct field is recommended.*
 
+### Global Filters
+
+Kyte supports global filters that are automatically applied to all filter instances. This is particularly useful for scenarios like multi-tenancy where certain conditions should always be included in your queries.
+
+```go
+// Set up global filters
+kyte.AddGlobalFilter(kyte.Filter().Equal("tenantId", "123"))
+kyte.AddGlobalFilter(kyte.Filter().Equal("isActive", true))
+
+// Create a new filter - global filters will be automatically included
+query, err := kyte.Filter().
+    Equal("name", "John").
+    Build()
+
+// The resulting query will include both the global filters and your specific conditions:
+// { "tenantId": {"$eq": "123"}, "isActive": {"$eq": true}, "name": {"$eq": "John"} }
+```
+
+You can manage global filters using these functions:
+```go
+// Add a global filter
+kyte.AddGlobalFilter(kyte.Filter().Equal("tenantId", "123"))
+
+// Get all current global filters
+globalFilters := kyte.GetGlobalFilters()
+
+// Clear all global filters
+kyte.ClearGlobalFilters()
+```
+
+Global filters are thread-safe and can be used in concurrent applications. They are particularly useful for:
+- Multi-tenancy: Automatically adding tenant ID to all queries
+- Soft Delete: Always excluding deleted records
+- Access Control: Adding user permission filters
+- Data Partitioning: Filtering by organization or department
+
 ## Supported Operators
 
 - Equal ([$eq](https://www.mongodb.com/docs/manual/reference/operator/query/eq/#mongodb-query-op.-eq))
