@@ -3,9 +3,15 @@ package kyte
 import (
 	"reflect"
 	"regexp"
+	"sync"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
+)
+
+var (
+	globalFilters []*filter
+	globalMutex   sync.RWMutex
 )
 
 const (
@@ -50,6 +56,45 @@ const (
 	// $bitsAnySet
 )
 
+/*
+AddGlobalFilter adds a filter that will be applied to all new filter instances.
+This is useful for scenarios like multi-tenancy where certain conditions should
+always be applied. This function is thread-safe.
+
+Example:
+
+	// Set up a global tenant filter
+	kyte.AddGlobalFilter(kyte.Filter().Equal("tenantId", "123"))
+*/
+func AddGlobalFilter(f *filter) {
+	globalMutex.Lock()
+	defer globalMutex.Unlock()
+	globalFilters = append(globalFilters, f)
+}
+
+/*
+ClearGlobalFilters removes all registered global filters.
+This function is thread-safe.
+*/
+func ClearGlobalFilters() {
+	globalMutex.Lock()
+	defer globalMutex.Unlock()
+	globalFilters = nil
+}
+
+/*
+GetGlobalFilters returns a copy of the current global filters.
+This function is thread-safe.
+*/
+func GetGlobalFilters() []*filter {
+	globalMutex.RLock()
+	defer globalMutex.RUnlock()
+	// Return a copy to prevent external modifications
+	result := make([]*filter, len(globalFilters))
+	copy(result, globalFilters)
+	return result
+}
+
 type filter struct {
 	kyte       *kyte
 	query      bson.D
@@ -69,10 +114,20 @@ func Filter(opts ...OptionFunc) *filter {
 
 	kyte := newKyte(options.source, options.validateField)
 
-	return &filter{
+	f := &filter{
 		kyte:  kyte,
 		query: bson.D{},
 	}
+
+	globalMutex.RLock()
+	for _, globalFilter := range globalFilters {
+		if globalQuery, err := globalFilter.Build(); err == nil {
+			f.query = append(f.query, globalQuery...)
+		}
+	}
+	globalMutex.RUnlock()
+
+	return f
 }
 
 /*
