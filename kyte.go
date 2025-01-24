@@ -44,6 +44,11 @@ type Options struct {
 	//
 	// Default: true
 	validateField bool
+
+	// IgnoreGlobalFilters when set to true, global filters will not be applied to this filter instance.
+	//
+	// Default: false
+	ignoreGlobalFilters bool
 }
 
 type OptionFunc func(*Options)
@@ -57,6 +62,15 @@ func ValidateField(validateField bool) OptionFunc {
 func Source(source any) OptionFunc {
 	return func(o *Options) {
 		o.source = source
+	}
+}
+
+/*
+IgnoreGlobalFilters is an option function that disables global filters for this filter instance.
+*/
+func IgnoreGlobalFilters() OptionFunc {
+	return func(o *Options) {
+		o.ignoreGlobalFilters = true
 	}
 }
 

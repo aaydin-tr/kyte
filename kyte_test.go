@@ -246,7 +246,6 @@ func TestNewKyte(t *testing.T) {
 	t.Run("source unexported field should not be added to kyte", func(t *testing.T) {
 		type TestAnonymousStruct struct {
 			Name string `bson:"name"`
-			age  int    `bson:"age"`
 		}
 
 		source := &TestAnonymousStruct{}

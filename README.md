@@ -104,6 +104,14 @@ query, err := kyte.Filter().
 
 // The resulting query will include both the global filters and your specific conditions:
 // { "tenantId": {"$eq": "123"}, "isActive": {"$eq": true}, "name": {"$eq": "John"} }
+
+// If you need to ignore global filters for a specific query:
+query, err := kyte.Filter(kyte.IgnoreGlobalFilters()).
+    Equal("name", "John").
+    Build()
+
+// The resulting query will not include global filters:
+// { "name": {"$eq": "John"} }
 ```
 
 You can manage global filters using these functions:

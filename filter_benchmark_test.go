@@ -37,6 +37,27 @@ func BenchmarkFilterWithGlobal(b *testing.B) {
 	}
 }
 
+func BenchmarkFilterWithIgnoredGlobal(b *testing.B) {
+	sizes := []int{10, 100, 1000, 10000}
+	for _, size := range sizes {
+		b.Run(fmt.Sprintf("input_size_%d", size), func(b *testing.B) {
+			ClearGlobalFilters()
+			// Add global filters that will be ignored
+			for i := 0; i < 5; i++ {
+				AddGlobalFilter(Filter().Equal(fmt.Sprintf("global%c", rune('A'+i)), i))
+			}
+			filter := Filter(IgnoreGlobalFilters()).
+				Equal("name", "John").
+				GreaterThan("age", 18).
+				In("roles", []string{"admin", "user"})
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_, _ = filter.Build()
+			}
+		})
+	}
+}
+
 func buildFilterWithSize(size int) *filter {
 	f := Filter()
 	// Add base conditions

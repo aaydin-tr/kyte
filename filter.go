@@ -119,13 +119,15 @@ func Filter(opts ...OptionFunc) *filter {
 		query: bson.D{},
 	}
 
-	globalMutex.RLock()
-	for _, globalFilter := range globalFilters {
-		if globalQuery, err := globalFilter.Build(); err == nil {
-			f.query = append(f.query, globalQuery...)
+	if !options.ignoreGlobalFilters {
+		globalMutex.RLock()
+		for _, globalFilter := range globalFilters {
+			if globalQuery, err := globalFilter.Build(); err == nil {
+				f.query = append(f.query, globalQuery...)
+			}
 		}
+		globalMutex.RUnlock()
 	}
-	globalMutex.RUnlock()
 
 	return f
 }
