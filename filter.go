@@ -246,6 +246,8 @@ func (f *filter) And(filter *filter) *filter {
 		filter.kyte.setSourceAndPrepareFields(f.kyte.source)
 	}
 
+	filter.query = nil // reset the query to avoid appending global filters again
+
 	query, err := filter.Build()
 	if err != nil {
 		f.kyte.setError(err)
@@ -280,6 +282,8 @@ func (f *filter) Or(filter *filter) *filter {
 		filter.kyte.setSourceAndPrepareFields(f.kyte.source)
 	}
 
+	filter.query = nil // reset the query to avoid appending global filters again
+
 	query, err := filter.Build()
 	if err != nil {
 		f.kyte.setError(err)
@@ -313,6 +317,8 @@ func (f *filter) NOR(filter *filter) *filter {
 		filter.kyte.checkField = f.kyte.checkField
 		filter.kyte.setSourceAndPrepareFields(f.kyte.source)
 	}
+
+	filter.query = nil // reset the query to avoid appending global filters again
 
 	query, err := filter.Build()
 	if err != nil {
