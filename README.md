@@ -20,6 +20,7 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#advanced-usage">Advanced Usage</a></li>
     <li><a href="#supported-operators">Supported Operators</a></li>
+    <li><a href="#running-tests">Running Tests</a></li>
   </ol>
 </details>
 <br>
@@ -40,6 +41,8 @@ Kyte is built with a straightforward vision: Make it easy. As any Gopher would k
 ```sh
 go get github.com/aaydin-tr/kyte
 ```
+
+Kyte requires Go 1.25 or later.
 
 ## Usage
 
@@ -256,6 +259,21 @@ Global filters are thread-safe and can be used in concurrent applications. They 
   fmt.Println(jsonQuery)
   // { "name": {"$eq": "John"}, "age": {"$gt": 20} }
   ```
+
+## Running Tests
+
+```sh
+go test ./...
+```
+
+The integration tests in [`integration/`](integration) run every operator against a real MongoDB server and check which documents match. They start a MongoDB container with [Testcontainers](https://golang.testcontainers.org/), so Docker must be running, and they are skipped unless `KYTE_INTEGRATION_TEST=true` is set:
+
+```sh
+KYTE_INTEGRATION_TEST=true go test ./integration/...
+
+# Pick the MongoDB image (default: mongo:8.0)
+KYTE_INTEGRATION_TEST=true KYTE_MONGO_IMAGE=mongo:7.0 go test ./integration/...
+```
 
 
 
